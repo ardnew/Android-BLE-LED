@@ -34,84 +34,119 @@ import java.util.Map;
 @SuppressWarnings("WeakerAccess")
 public class PeripheralDevice {
 
-    public static final int    INVALID_ID      = -1;
-    public static final String INVALID_NAME    = "";
+    public static final int INVALID_ID = -1;
+    public static final String INVALID_NAME = "";
     public static final String INVALID_ADDRESS = "";
-    public static final int    INVALID_RSSI    = -256;
+    public static final int INVALID_RSSI = -256;
 
-    private int      id;
-    private String   name;
-    private String   address;
-    private int      rssi;
+    private int id;
+    private String name;
+    private String address;
+    private int rssi;
 
-    private final BluetoothDevice         device;
-    private final boolean                 isConnectable;
+    private final BluetoothDevice device;
+    private final boolean isConnectable;
     private final Map<ParcelUuid, byte[]> serviceData;
 
     PeripheralDevice() {
 
-        this.id      = PeripheralDevice.INVALID_ID;
-        this.name    = PeripheralDevice.INVALID_NAME;
+        this.id = PeripheralDevice.INVALID_ID;
+        this.name = PeripheralDevice.INVALID_NAME;
         this.address = PeripheralDevice.INVALID_ADDRESS;
-        this.rssi    = PeripheralDevice.INVALID_RSSI;
+        this.rssi = PeripheralDevice.INVALID_RSSI;
 
-        this.device        = null;
+        this.device = null;
         this.isConnectable = false;
-        this.serviceData   = null;
+        this.serviceData = null;
     }
 
     PeripheralDevice(int id, BluetoothRadio.DeviceScanResult scanResult) {
 
-        this.id      = id;
-        this.name    = scanResult.name();
+        this.id = id;
+        this.name = scanResult.name();
         this.address = scanResult.address();
-        this.rssi    = scanResult.rssi();
+        this.rssi = scanResult.rssi();
 
-        this.device        = scanResult.device();
+        this.device = scanResult.device();
         this.isConnectable = scanResult.content().isConnectable();
-        this.serviceData   = scanResult.scanRecord().getServiceData();
+        this.serviceData = scanResult.scanRecord().getServiceData();
 
     }
 
-    @NonNull @Override public String toString() {
+    @NonNull
+    @Override
+    public String toString() {
 
         StringBuilder stringBuilder = new StringBuilder(Utility.format("(%d)", this.id));
-        if (this.address().length() > 0 && !this.address().equals(PeripheralDevice.INVALID_ADDRESS))
-            { stringBuilder.append(Utility.format(" %s", this.address())); }
-        if (this.name().length() > 0 && !this.name().equals(PeripheralDevice.INVALID_NAME))
-            { stringBuilder.append(Utility.format(" \"%s\"", this.name())); }
-        if (PeripheralDevice.INVALID_RSSI != this.rssi())
-            { stringBuilder.append(Utility.format(" [%d dBm]", this.rssi())); }
+        if (this.address().length() > 0 && !this.address().equals(PeripheralDevice.INVALID_ADDRESS)) {
+            stringBuilder.append(Utility.format(" %s", this.address()));
+        }
+        if (this.name().length() > 0 && !this.name().equals(PeripheralDevice.INVALID_NAME)) {
+            stringBuilder.append(Utility.format(" \"%s\"", this.name()));
+        }
+        if (PeripheralDevice.INVALID_RSSI != this.rssi()) {
+            stringBuilder.append(Utility.format(" [%d dBm]", this.rssi()));
+        }
         return stringBuilder.toString();
     }
 
     @SuppressWarnings("unused")
-    public void setId(int id)              { this.id = id; }
-    @SuppressWarnings("unused")
-    public void setName(String name)       { this.name = name; }
-    @SuppressWarnings("unused")
-    public void setAddress(String address) { this.address = address; }
-    @SuppressWarnings("unused")
-    public void setRssi(int rssi)          { this.rssi = rssi; }
+    public void setId(int id) {
+        this.id = id;
+    }
 
-    public int    id()      { return this.id; }
-    public String name()    { return this.name.trim(); }
-    public String address() { return this.address.trim(); }
-    public int    rssi()    { return this.rssi; }
+    @SuppressWarnings("unused")
+    public void setName(String name) {
+        this.name = name;
+    }
 
-    public BluetoothDevice         device()        { return this.device; }
-    public boolean                 isConnectable() { return this.isConnectable; }
-    public Map<ParcelUuid, byte[]> serviceData()   { return this.serviceData; }
+    @SuppressWarnings("unused")
+    public void setAddress(String address) {
+        this.address = address;
+    }
+
+    @SuppressWarnings("unused")
+    public void setRssi(int rssi) {
+        this.rssi = rssi;
+    }
+
+    public int id() {
+        return this.id;
+    }
+
+    public String name() {
+        return this.name.trim();
+    }
+
+    public String address() {
+        return this.address.trim();
+    }
+
+    public int rssi() {
+        return this.rssi;
+    }
+
+    public BluetoothDevice device() {
+        return this.device;
+    }
+
+    public boolean isConnectable() {
+        return this.isConnectable;
+    }
+
+    public Map<ParcelUuid, byte[]> serviceData() {
+        return this.serviceData;
+    }
 
     public boolean equals(PeripheralDevice device) {
 
         return
                 this.id() == device.id() &&
-                this.name().equalsIgnoreCase(device.name()) &&
-                this.address().equalsIgnoreCase(device.address()) &&
-                this.rssi() == device.rssi() &&
-                this.device().equals(device.device()) &&
-                this.isConnectable() == device.isConnectable();
+                        this.name().equalsIgnoreCase(device.name()) &&
+                        this.address().equalsIgnoreCase(device.address()) &&
+                        this.rssi() == device.rssi() &&
+                        this.device().equals(device.device()) &&
+                        this.isConnectable() == device.isConnectable();
 
     }
 

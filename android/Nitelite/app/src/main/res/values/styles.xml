@@ -26,10 +26,12 @@
 
     <!-- Base application theme. -->
     <style name="AppTheme" parent="Theme.MaterialComponents.NoActionBar" />
+
     <style name="AppTheme.Popover" parent="ThemeOverlay.MaterialComponents.Dark">
         <item name="android:background">@color/color_transparent</item>
         <item name="android:textColor">@color/color_primary_text</item>
     </style>
+
     <style name="AppTheme.ToolbarLayout" parent="ThemeOverlay.MaterialComponents.Dark.ActionBar">
         <item name="windowActionBar">false</item>
         <item name="windowNoTitle">true</item>

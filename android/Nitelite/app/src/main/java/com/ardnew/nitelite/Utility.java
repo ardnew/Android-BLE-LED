@@ -39,9 +39,10 @@ class Utility {
 
     static void dismissKeyboard(AppCompatActivity activity, View sender) {
 
-        InputMethodManager manager = (InputMethodManager)activity.getSystemService(Activity.INPUT_METHOD_SERVICE);
-        if (null != manager)
-            { manager.hideSoftInputFromWindow(sender.getWindowToken(), 0); }
+        InputMethodManager manager = (InputMethodManager) activity.getSystemService(Activity.INPUT_METHOD_SERVICE);
+        if (null != manager) {
+            manager.hideSoftInputFromWindow(sender.getWindowToken(), 0);
+        }
     }
 
     private static Locale locale() {
@@ -57,8 +58,9 @@ class Utility {
     @SuppressWarnings("SameParameterValue")
     static String join(List<String> list, String separator) {
 
-        if (null == list)
-            { return null; }
+        if (null == list) {
+            return null;
+        }
 
         switch (list.size()) {
             case 0:

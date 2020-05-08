@@ -37,7 +37,8 @@ import androidx.appcompat.widget.Toolbar;
 
 public class MainActivity extends AppCompatActivity {
 
-    @Override protected void onCreate(Bundle savedInstanceState) {
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
 
         super.onCreate(savedInstanceState);
 
@@ -47,7 +48,8 @@ public class MainActivity extends AppCompatActivity {
         this.setSupportActionBar(toolBar);
     }
 
-    @Override public void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
+    @Override
+    public void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
 
         super.onActivityResult(requestCode, resultCode, data);
 
@@ -59,7 +61,7 @@ public class MainActivity extends AppCompatActivity {
                 switch (resultCode) {
 
                     case ScanActivity.SCAN_RESULT_OK:
-                        Log.d("scan-activity",  Utility.format("result = %d", resultCode));
+                        Log.d("scan-activity", Utility.format("result = %d", resultCode));
                     case ScanActivity.SCAN_RESULT_ERROR:
                     default:
                         break;
@@ -68,7 +70,8 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    @Override public boolean onCreateOptionsMenu(Menu menu) {
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
 
         MenuInflater inflater = this.getMenuInflater();
         inflater.inflate(R.menu.toolbar_main, menu);
@@ -76,7 +79,8 @@ public class MainActivity extends AppCompatActivity {
         return super.onCreateOptionsMenu(menu);
     }
 
-    @Override public boolean onOptionsItemSelected(MenuItem item) {
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
 
         //noinspection SwitchStatementWithTooFewBranches
         switch (item.getItemId()) {

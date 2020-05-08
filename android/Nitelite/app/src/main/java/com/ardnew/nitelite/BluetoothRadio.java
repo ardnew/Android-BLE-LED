@@ -48,34 +48,35 @@ import java.util.List;
 class BluetoothRadio {
 
     // activity request code, used to identify origin in onActivityResult
-    static final int  REQUEST_BLUETOOTH_ENABLE     = 1;
-    static final int  REQUEST_BLUETOOTH_PERMISSION = 1;
-    static final long SCAN_DURATION_MS             = 10000;
+    static final int REQUEST_BLUETOOTH_ENABLE = 1;
+    static final int REQUEST_BLUETOOTH_PERMISSION = 1;
+    static final long SCAN_DURATION_MS = 10000;
 
     private boolean isReady;
     private boolean isScanning;
-    private long    scanDuration;
+    private long scanDuration;
 
-    private final ScanActivity       scanActivity;
+    private final ScanActivity scanActivity;
     private final DeviceScanCallback scanCallback;
-    private final Handler            scanHandler;
+    private final Handler scanHandler;
 
-    private BluetoothManager   bluetoothManager;
-    private BluetoothAdapter   bluetoothAdapter;
+    private BluetoothManager bluetoothManager;
+    private BluetoothAdapter bluetoothAdapter;
     private BluetoothLeScanner bluetoothScanner;
 
     BluetoothRadio(ScanActivity scanActivity) throws BluetoothRadio.BluetoothNotSupportedException {
 
-        this.isReady      = false;
-        this.isScanning   = false;
+        this.isReady = false;
+        this.isScanning = false;
         this.scanDuration = BluetoothRadio.SCAN_DURATION_MS;
 
         this.scanActivity = scanActivity;
         this.scanCallback = new DeviceScanCallback(this.scanActivity);
-        this.scanHandler  = new Handler();
+        this.scanHandler = new Handler();
 
-        if (this.scanActivity.getPackageManager().hasSystemFeature(PackageManager.FEATURE_BLUETOOTH_LE))
-            { this.bluetoothManager = (BluetoothManager)this.scanActivity.getSystemService(Context.BLUETOOTH_SERVICE); }
+        if (this.scanActivity.getPackageManager().hasSystemFeature(PackageManager.FEATURE_BLUETOOTH_LE)) {
+            this.bluetoothManager = (BluetoothManager) this.scanActivity.getSystemService(Context.BLUETOOTH_SERVICE);
+        }
 
         if (null == this.bluetoothManager) {
             throw new BluetoothRadio.BluetoothNotSupportedException(
@@ -103,8 +104,9 @@ class BluetoothRadio {
         this.isReady = isReady;
 
         // notify the activity if radio state changed from not-ready to ready
-        if (this.isReady && readyChange)
-            { this.scanActivity.onBluetoothRadioReady(); }
+        if (this.isReady && readyChange) {
+            this.scanActivity.onBluetoothRadioReady();
+        }
     }
 
     @SuppressWarnings("unused")
@@ -205,10 +207,10 @@ class BluetoothRadio {
                     new PermissionRequestEventListener(this.scanActivity, new String[]{permission});
 
             new AlertDialog.Builder(this.scanActivity)
-                .setMessage(message)
-                .setPositiveButton(android.R.string.ok, null)
-                .setOnDismissListener(requestEventListener)
-                .create().show();
+                    .setMessage(message)
+                    .setPositiveButton(android.R.string.ok, null)
+                    .setOnDismissListener(requestEventListener)
+                    .create().show();
 
         } else {
             this.onPermitBluetoothScan();
@@ -239,7 +241,8 @@ class BluetoothRadio {
             this.scanActivity = scanActivity;
         }
 
-        @Override public void onScanResult(int callbackType, ScanResult result) {
+        @Override
+        public void onScanResult(int callbackType, ScanResult result) {
 
             super.onScanResult(callbackType, result);
             this.scanActivity.runOnUiThread(
@@ -247,12 +250,14 @@ class BluetoothRadio {
             );
         }
 
-        @Override public void onScanFailed(int errorCode) {
+        @Override
+        public void onScanFailed(int errorCode) {
 
             super.onScanFailed(errorCode);
         }
 
-        @Override public void onBatchScanResults(List<ScanResult> results) {
+        @Override
+        public void onBatchScanResults(List<ScanResult> results) {
 
             super.onBatchScanResults(results);
         }
@@ -291,13 +296,15 @@ class BluetoothRadio {
                 name = device.getName();
                 if ((null == name) || (0 == name.trim().length())) {
                     ScanRecord scanRecord = this.scanResult.getScanRecord();
-                    if (null != scanRecord)
-                        { name = this.scanResult.getScanRecord().getDeviceName(); }
+                    if (null != scanRecord) {
+                        name = this.scanResult.getScanRecord().getDeviceName();
+                    }
                 }
             }
 
-            if (null == name)
-                { name = PeripheralDevice.INVALID_NAME; }
+            if (null == name) {
+                name = PeripheralDevice.INVALID_NAME;
+            }
 
             return name;
         }
@@ -307,11 +314,13 @@ class BluetoothRadio {
             BluetoothDevice device = this.scanResult.getDevice();
             String address = null;
 
-            if (null != device)
-                { address = device.getAddress(); }
+            if (null != device) {
+                address = device.getAddress();
+            }
 
-            if (null == address)
-                { address = PeripheralDevice.INVALID_ADDRESS; }
+            if (null == address) {
+                address = PeripheralDevice.INVALID_ADDRESS;
+            }
 
             return address;
         }
@@ -325,17 +334,18 @@ class BluetoothRadio {
     private static class PermissionRequestEventListener implements DialogInterface.OnDismissListener {
 
         private final ScanActivity scanActivity;
-        private final String[]     permission;
-        private final int          requestCode;
+        private final String[] permission;
+        private final int requestCode;
 
         PermissionRequestEventListener(@NonNull ScanActivity scanActivity, String[] permission) {
 
             this.scanActivity = scanActivity;
-            this.permission   = permission;
-            this.requestCode  = BluetoothRadio.REQUEST_BLUETOOTH_PERMISSION;
+            this.permission = permission;
+            this.requestCode = BluetoothRadio.REQUEST_BLUETOOTH_PERMISSION;
         }
 
-        @Override public void onDismiss(DialogInterface dialog) {
+        @Override
+        public void onDismiss(DialogInterface dialog) {
 
             this.scanActivity.requestPermissions(this.permission, this.requestCode);
         }

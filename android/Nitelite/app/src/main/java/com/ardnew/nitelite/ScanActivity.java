@@ -45,60 +45,69 @@ import com.google.android.material.snackbar.Snackbar;
 public class ScanActivity extends AppCompatActivity {
 
     public static final int REQUEST_DEVICE_SCAN = 0xD00D;
-    public static final int SCAN_RESULT_OK      = 0xB0;
-    public static final int SCAN_RESULT_ERROR   = 0xB1;
+    public static final int SCAN_RESULT_OK = 0xB0;
+    public static final int SCAN_RESULT_ERROR = 0xB1;
 
-    SearchView           searchBar        = null;
+    SearchView searchBar = null;
     @SuppressWarnings("WeakerAccess")
-    DeviceScanAdapter    scanAdapter      = null;
+    DeviceScanAdapter scanAdapter = null;
     @SuppressWarnings("WeakerAccess")
-    FloatingActionButton refreshButton    = null;
+    FloatingActionButton refreshButton = null;
     @SuppressWarnings("WeakerAccess")
-    Snackbar             scanningSnackBar = null;
+    Snackbar scanningSnackBar = null;
     @SuppressWarnings("WeakerAccess")
-    BluetoothRadio       bluetoothRadio   = null;
+    BluetoothRadio bluetoothRadio = null;
 
-    @Override protected void onStart() {
+    @Override
+    protected void onStart() {
 
         super.onStart();
 
-        if (null != this.bluetoothRadio)
-            { this.bluetoothRadio.enableBluetooth(); }
+        if (null != this.bluetoothRadio) {
+            this.bluetoothRadio.enableBluetooth();
+        }
     }
 
     @SuppressWarnings("EmptyMethod")
-    @Override protected void onResume() {
+    @Override
+    protected void onResume() {
 
         super.onResume();
     }
 
     @SuppressWarnings("EmptyMethod")
-    @Override protected void onPause(){
+    @Override
+    protected void onPause() {
 
         super.onPause();
     }
 
-    @Override protected void onStop() {
+    @Override
+    protected void onStop() {
 
         super.onStop();
 
-        if (null != this.bluetoothRadio)
-            { this.bluetoothRadio.setIsScanning(false); }
+        if (null != this.bluetoothRadio) {
+            this.bluetoothRadio.setIsScanning(false);
+        }
     }
 
     @SuppressWarnings("EmptyMethod")
-    @Override protected void onRestart() {
+    @Override
+    protected void onRestart() {
 
         super.onRestart();
     }
 
     @SuppressWarnings("EmptyMethod")
-    @Override protected void onDestroy() {
+    @Override
+    protected void onDestroy() {
 
         super.onDestroy();
     }
 
-    @Override protected void onCreate(Bundle savedInstanceState) {
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
 
         super.onCreate(savedInstanceState);
 
@@ -110,8 +119,9 @@ public class ScanActivity extends AppCompatActivity {
         this.setSupportActionBar(toolBar);
 
         ActionBar actionBar = this.getSupportActionBar();
-        if (null != actionBar)
-            { actionBar.setDisplayHomeAsUpEnabled(true); }
+        if (null != actionBar) {
+            actionBar.setDisplayHomeAsUpEnabled(true);
+        }
 
         SearchBarEventListener searchBarEventListener = new SearchBarEventListener(this);
         this.searchBar = this.findViewById(R.id.scan_filter_search_view);
@@ -129,16 +139,18 @@ public class ScanActivity extends AppCompatActivity {
         this.refreshButton.setOnClickListener(refreshButtonEventListener);
 
         ScanningSnackBarEventListener scanningSnackBarEventListener = new ScanningSnackBarEventListener(this);
-        this.scanningSnackBar = Snackbar.make(this.refreshButton, R.string.scan_begin_text, (int)BluetoothRadio.SCAN_DURATION_MS);
+        this.scanningSnackBar = Snackbar.make(this.refreshButton, R.string.scan_begin_text, (int) BluetoothRadio.SCAN_DURATION_MS);
         this.scanningSnackBar.setAction("Stop", scanningSnackBarEventListener);
 
-        try
-            { this.bluetoothRadio = new BluetoothRadio(this); }
-        catch (Exception ex)
-            { this.displayFatalAlert("Failed to initialize", ex.getMessage()); }
+        try {
+            this.bluetoothRadio = new BluetoothRadio(this);
+        } catch (Exception ex) {
+            this.displayFatalAlert("Failed to initialize", ex.getMessage());
+        }
     }
 
-    @Override public void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
+    @Override
+    public void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
 
         super.onActivityResult(requestCode, resultCode, data);
 
@@ -146,13 +158,15 @@ public class ScanActivity extends AppCompatActivity {
         switch (requestCode) {
 
             case BluetoothRadio.REQUEST_BLUETOOTH_ENABLE:
-                if (!this.bluetoothRadio.onEnableBluetoothActivityResult(resultCode))
-                    { displayFatalAlert("Failed to initialize", this.getString(R.string.fatal_alert_bluetooth_not_enabled)); }
+                if (!this.bluetoothRadio.onEnableBluetoothActivityResult(resultCode)) {
+                    displayFatalAlert("Failed to initialize", this.getString(R.string.fatal_alert_bluetooth_not_enabled));
+                }
                 break;
         }
     }
 
-    @Override public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
 
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
 
@@ -160,8 +174,9 @@ public class ScanActivity extends AppCompatActivity {
         switch (requestCode) {
 
             case BluetoothRadio.REQUEST_BLUETOOTH_PERMISSION:
-                if (!this.bluetoothRadio.onPermitBluetoothScanPermissionsResult(grantResults))
-                    { displayFatalAlert("Permission denied", this.getString(R.string.fatal_alert_bluetooth_scan_not_permitted)); }
+                if (!this.bluetoothRadio.onPermitBluetoothScanPermissionsResult(grantResults)) {
+                    displayFatalAlert("Permission denied", this.getString(R.string.fatal_alert_bluetooth_scan_not_permitted));
+                }
                 break;
         }
     }
@@ -200,14 +215,14 @@ public class ScanActivity extends AppCompatActivity {
         this.setResult(result);
 
         new AlertDialog.Builder(this)
-            .setTitle(title)
-            .setMessage(message)
-            .setCancelable(false)
-            .setNeutralButton(
-                    this.getString(R.string.fatal_alert_button_text),
-                    new FatalEventListener(this)
-            )
-            .create().show();
+                .setTitle(title)
+                .setMessage(message)
+                .setCancelable(false)
+                .setNeutralButton(
+                        this.getString(R.string.fatal_alert_button_text),
+                        new FatalEventListener(this)
+                )
+                .create().show();
     }
 
     static class FatalEventListener implements DialogInterface.OnClickListener {
@@ -219,7 +234,8 @@ public class ScanActivity extends AppCompatActivity {
             this.activity = activity;
         }
 
-        @Override public void onClick(DialogInterface dialog, int which) {
+        @Override
+        public void onClick(DialogInterface dialog, int which) {
 
             this.activity.finishAndRemoveTask();
         }
@@ -234,15 +250,18 @@ public class ScanActivity extends AppCompatActivity {
             this.activity = activity;
         }
 
-        @Override public void onClick(View view) {
+        @Override
+        public void onClick(View view) {
 
             this.activity.searchBar.onActionViewExpanded();
         }
 
-        @Override public void onFocusChange(View view, boolean hasFocus) {
+        @Override
+        public void onFocusChange(View view, boolean hasFocus) {
 
-            if (!hasFocus)
-                { Utility.dismissKeyboard(this.activity, view); }
+            if (!hasFocus) {
+                Utility.dismissKeyboard(this.activity, view);
+            }
         }
     }
 
@@ -255,7 +274,8 @@ public class ScanActivity extends AppCompatActivity {
             this.activity = activity;
         }
 
-        @Override public void onClick(View view) {
+        @Override
+        public void onClick(View view) {
 
             this.activity.bluetoothRadio.setIsScanning(true);
         }
@@ -270,7 +290,8 @@ public class ScanActivity extends AppCompatActivity {
             this.activity = activity;
         }
 
-        @Override public void onClick(View view) {
+        @Override
+        public void onClick(View view) {
 
             this.activity.bluetoothRadio.setIsScanning(false);
         }

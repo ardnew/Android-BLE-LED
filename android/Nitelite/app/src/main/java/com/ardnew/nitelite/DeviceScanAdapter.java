@@ -43,33 +43,38 @@ public class DeviceScanAdapter extends RecyclerView.Adapter<DeviceScanAdapter.Vi
 
     private final Object deviceLock = new Object();
 
-    private final ScanActivity           activity;
+    private final ScanActivity activity;
     private final List<PeripheralDevice> device;
 
     DeviceScanAdapter(@NonNull ScanActivity activity) {
 
         this.activity = activity;
-        this.device   = new ArrayList<>();
+        this.device = new ArrayList<>();
     }
 
-    @NonNull @Override public DeviceScanAdapter.ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
+    @NonNull
+    @Override
+    public DeviceScanAdapter.ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
 
         View itemView = LayoutInflater.
-                    from(parent.getContext()).
-                    inflate(R.layout.device_card, parent, false);
+                from(parent.getContext()).
+                inflate(R.layout.device_card, parent, false);
 
         return new DeviceScanAdapter.ViewHolder(this.activity, itemView);
     }
 
-    @Override public void onBindViewHolder(@NonNull DeviceScanAdapter.ViewHolder holder, int position) {
+    @Override
+    public void onBindViewHolder(@NonNull DeviceScanAdapter.ViewHolder holder, int position) {
 
         PeripheralDevice device;
 
         try {
-            synchronized (this.deviceLock)
-                { device = this.device.get(position); }
-        } catch (Exception ex)
-            { device = new PeripheralDevice(); }
+            synchronized (this.deviceLock) {
+                device = this.device.get(position);
+            }
+        } catch (Exception ex) {
+            device = new PeripheralDevice();
+        }
 
         holder.nameLabel.setText(Utility.format("%s", device.name()));
         holder.addressLabel.setText(device.address());
@@ -79,12 +84,14 @@ public class DeviceScanAdapter extends RecyclerView.Adapter<DeviceScanAdapter.Vi
         holder.setIsConnectable(device.isConnectable(), true);
 
         ArrayList<String> services = new ArrayList<>();
-        for (ParcelUuid uuid: device.serviceData().keySet())
-            { services.add(uuid.getUuid().toString()); }
+        for (ParcelUuid uuid : device.serviceData().keySet()) {
+            services.add(uuid.getUuid().toString());
+        }
         holder.setCharacteristics(services);
     }
 
-    @Override public int getItemCount() {
+    @Override
+    public int getItemCount() {
 
         return this.count();
     }
@@ -92,8 +99,9 @@ public class DeviceScanAdapter extends RecyclerView.Adapter<DeviceScanAdapter.Vi
     @SuppressWarnings("WeakerAccess")
     public int count() {
 
-        synchronized (this.deviceLock)
-            { return this.device.size(); }
+        synchronized (this.deviceLock) {
+            return this.device.size();
+        }
     }
 
     @SuppressWarnings("WeakerAccess")
@@ -102,8 +110,9 @@ public class DeviceScanAdapter extends RecyclerView.Adapter<DeviceScanAdapter.Vi
         synchronized (this.deviceLock) {
             for (int i = 0; i < this.device.size(); ++i) {
                 PeripheralDevice curr = this.device.get(i);
-                if ((null != curr) && address.equals(curr.address()))
-                    { return curr; }
+                if ((null != curr) && address.equals(curr.address())) {
+                    return curr;
+                }
             }
         }
         return null;
@@ -113,8 +122,9 @@ public class DeviceScanAdapter extends RecyclerView.Adapter<DeviceScanAdapter.Vi
     public PeripheralDevice get(int index) {
 
         synchronized (this.deviceLock) {
-            if ((index >= 0) && (index < this.device.size()))
-                { return this.device.get(index); }
+            if ((index >= 0) && (index < this.device.size())) {
+                return this.device.get(index);
+            }
         }
         return null;
     }
@@ -129,8 +139,9 @@ public class DeviceScanAdapter extends RecyclerView.Adapter<DeviceScanAdapter.Vi
             synchronized (this.deviceLock) {
 
                 int insertIndex = 0;
-                while (insertIndex < this.device.size() && this.device.get(insertIndex).rssi() >= rssi)
-                    { ++insertIndex; }
+                while (insertIndex < this.device.size() && this.device.get(insertIndex).rssi() >= rssi) {
+                    ++insertIndex;
+                }
 
                 PeripheralDevice insertPeriph = new PeripheralDevice(insertIndex, scanResult);
 
@@ -145,8 +156,9 @@ public class DeviceScanAdapter extends RecyclerView.Adapter<DeviceScanAdapter.Vi
                 }
 
                 // update ID for all items that were shifted over
-                for (int i = insertIndex + 1; i < this.device.size(); ++i)
-                    { this.device.get(i).setId(i); }
+                for (int i = insertIndex + 1; i < this.device.size(); ++i) {
+                    this.device.get(i).setId(i);
+                }
             }
         }
     }
@@ -170,7 +182,8 @@ public class DeviceScanAdapter extends RecyclerView.Adapter<DeviceScanAdapter.Vi
     @SuppressWarnings("unused")
     static class PeripheralDeviceSortByRssi implements Comparator<PeripheralDevice> {
 
-        @Override public int compare(PeripheralDevice p1, PeripheralDevice p2) {
+        @Override
+        public int compare(PeripheralDevice p1, PeripheralDevice p2) {
 
             return p2.rssi() - p1.rssi();
         }
@@ -178,20 +191,20 @@ public class DeviceScanAdapter extends RecyclerView.Adapter<DeviceScanAdapter.Vi
 
     static class ViewHolder extends RecyclerView.ViewHolder {
 
-        private static final int    COLLAPSED_IMAGE_ROTATION = 0;
-        private static final int    EXPANDED_IMAGE_ROTATION  = 180;
-        private static final String TEXT_VIEW_NEWLINE        = "\n";
+        private static final int COLLAPSED_IMAGE_ROTATION = 0;
+        private static final int EXPANDED_IMAGE_ROTATION = 180;
+        private static final String TEXT_VIEW_NEWLINE = "\n";
 
         final ScanActivity scanActivity;
 
         @SuppressWarnings("unused")
-        final View      parent;
-        final TextView  addressLabel;
-        final TextView  rssiLabel;
+        final View parent;
+        final TextView addressLabel;
+        final TextView rssiLabel;
         final ImageView expandImage;
-        final TextView  nameLabel;
-        final TextView  characteristicsView;
-        final Button    connectButton;
+        final TextView nameLabel;
+        final TextView characteristicsView;
+        final Button connectButton;
 
         boolean isExpanded;
         @SuppressWarnings("unused")
@@ -203,13 +216,13 @@ public class DeviceScanAdapter extends RecyclerView.Adapter<DeviceScanAdapter.Vi
 
             this.scanActivity = scanActivity;
 
-            this.parent              = itemView;
-            this.addressLabel        = itemView.findViewById(R.id.device_card_address_label);
-            this.rssiLabel           = itemView.findViewById(R.id.device_card_rssi_label);
-            this.expandImage         = itemView.findViewById(R.id.device_card_expand_image);
-            this.nameLabel           = itemView.findViewById(R.id.device_card_name_label);
+            this.parent = itemView;
+            this.addressLabel = itemView.findViewById(R.id.device_card_address_label);
+            this.rssiLabel = itemView.findViewById(R.id.device_card_rssi_label);
+            this.expandImage = itemView.findViewById(R.id.device_card_expand_image);
+            this.nameLabel = itemView.findViewById(R.id.device_card_name_label);
             this.characteristicsView = itemView.findViewById(R.id.device_card_characteristics_view);
-            this.connectButton       = itemView.findViewById(R.id.device_card_connect_button);
+            this.connectButton = itemView.findViewById(R.id.device_card_connect_button);
 
             this.setCharacteristics(null);
 
@@ -261,8 +274,9 @@ public class DeviceScanAdapter extends RecyclerView.Adapter<DeviceScanAdapter.Vi
 
             boolean connectableChanged = this.isConnectable != isConnectable;
 
-            if (connectableChanged || override)
-                { this.connectButton.setEnabled(isConnectable); }
+            if (connectableChanged || override) {
+                this.connectButton.setEnabled(isConnectable);
+            }
         }
 
         private void setCharacteristics(List<String> characteristics) {
@@ -277,11 +291,12 @@ public class DeviceScanAdapter extends RecyclerView.Adapter<DeviceScanAdapter.Vi
             boolean hasCharacteristicsText = (null != characteristicsText) && (characteristicsText.length() > 0);
 
             boolean visibilityChanged =
-                    ( visible && (currentVisibility != View.VISIBLE)) ||
-                    (!visible && (currentVisibility == View.VISIBLE));
+                    (visible && (currentVisibility != View.VISIBLE)) ||
+                            (!visible && (currentVisibility == View.VISIBLE));
 
-            if (visibilityChanged)
-                { this.characteristicsView.setVisibility((visible && hasCharacteristicsText) ? View.VISIBLE : View.GONE); }
+            if (visibilityChanged) {
+                this.characteristicsView.setVisibility((visible && hasCharacteristicsText) ? View.VISIBLE : View.GONE);
+            }
         }
 
         static class CardEventListener implements View.OnClickListener {
@@ -293,7 +308,8 @@ public class DeviceScanAdapter extends RecyclerView.Adapter<DeviceScanAdapter.Vi
                 this.viewHolder = viewHolder;
             }
 
-            @Override public void onClick(View view) {
+            @Override
+            public void onClick(View view) {
 
                 this.viewHolder.scanActivity.searchBar.clearFocus();
                 this.viewHolder.setIsExpanded(!this.viewHolder.isExpanded());
