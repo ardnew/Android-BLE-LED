@@ -37,6 +37,8 @@ import java.util.Locale;
 
 class Utility {
 
+    private static final int INVALID_UINT = -1;
+
     static void dismissKeyboard(AppCompatActivity activity, View sender) {
 
         InputMethodManager manager = (InputMethodManager) activity.getSystemService(Activity.INPUT_METHOD_SERVICE);
@@ -45,7 +47,8 @@ class Utility {
         }
     }
 
-    private static Locale locale() {
+    @SuppressWarnings("WeakerAccess")
+    static Locale locale() {
 
         return Locale.getDefault();
     }
@@ -53,6 +56,11 @@ class Utility {
     static String format(@NonNull String format, Object... args) {
 
         return String.format(Utility.locale(), format, args);
+    }
+
+    static String lowerCase(@NonNull String string) {
+
+        return string.toLowerCase(Utility.locale());
     }
 
     @SuppressWarnings("SameParameterValue")
@@ -77,6 +85,66 @@ class Utility {
                     stringBuilder.append(separator);
                 }
                 return stringBuilder.toString();
+        }
+    }
+
+    static boolean isValidUint(int uint) {
+
+        return uint >= 0;
+    }
+
+    @SuppressWarnings("WeakerAccess")
+    static Integer parseUint(@NonNull String string, int base) {
+
+        int uint;
+
+        try {
+            uint = Integer.parseUnsignedInt(string, base);
+        } catch (Exception ex) {
+            uint = INVALID_UINT;
+        }
+
+        return uint;
+    }
+
+    static Integer parseUint(@NonNull String string) {
+
+        string = string.trim();
+
+        if (string.startsWith("+")) {
+            string = string.substring(1);
+        }
+
+        int base;
+
+        if (string.startsWith("0x") || string.startsWith("\\x")) {
+            string = string.substring(2);
+            base = 16;
+        } else if (string.startsWith("x") || string.startsWith("$") || string.startsWith("#")) {
+            string = string.substring(1);
+            base = 16;
+        } else if (string.matches("[a-f]") && string.matches("^[a-f0-9]+$")) {
+            base = 16;
+        } else if (string.startsWith("0o") || string.startsWith("\\o")) {
+            string = string.substring(2);
+            base = 8;
+        } else if (string.startsWith("o")) {
+            string = string.substring(1);
+            base = 8;
+        } else if (string.startsWith("0b") || string.startsWith("\\b")) {
+            string = string.substring(2);
+            base = 2;
+        } else if (string.startsWith("b")) {
+            string = string.substring(1);
+            base = 2;
+        } else {
+            base = 10;
+        }
+
+        if (string.length() > 0) {
+            return Utility.parseUint(string, base);
+        } else {
+            return INVALID_UINT;
         }
     }
 }

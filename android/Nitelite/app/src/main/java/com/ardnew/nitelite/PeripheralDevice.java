@@ -26,6 +26,7 @@ package com.ardnew.nitelite;
 
 import android.bluetooth.BluetoothDevice;
 import android.os.ParcelUuid;
+import android.util.SparseArray;
 
 import androidx.annotation.NonNull;
 
@@ -40,13 +41,14 @@ public class PeripheralDevice {
     public static final int INVALID_RSSI = -256;
 
     private int id;
-    private String name;
-    private String address;
-    private int rssi;
+    private final String name;
+    private final String address;
+    private final int rssi;
 
     private final BluetoothDevice device;
     private final boolean isConnectable;
     private final Map<ParcelUuid, byte[]> serviceData;
+    private final SparseArray<byte[]> mfgData;
 
     PeripheralDevice() {
 
@@ -58,6 +60,7 @@ public class PeripheralDevice {
         this.device = null;
         this.isConnectable = false;
         this.serviceData = null;
+        this.mfgData = null;
     }
 
     PeripheralDevice(int id, BluetoothRadio.DeviceScanResult scanResult) {
@@ -70,7 +73,7 @@ public class PeripheralDevice {
         this.device = scanResult.device();
         this.isConnectable = scanResult.content().isConnectable();
         this.serviceData = scanResult.scanRecord().getServiceData();
-
+        this.mfgData = scanResult.scanRecord().getManufacturerSpecificData();
     }
 
     @NonNull
@@ -90,52 +93,50 @@ public class PeripheralDevice {
         return stringBuilder.toString();
     }
 
-    @SuppressWarnings("unused")
     public void setId(int id) {
+
         this.id = id;
     }
 
-    @SuppressWarnings("unused")
-    public void setName(String name) {
-        this.name = name;
-    }
-
-    @SuppressWarnings("unused")
-    public void setAddress(String address) {
-        this.address = address;
-    }
-
-    @SuppressWarnings("unused")
-    public void setRssi(int rssi) {
-        this.rssi = rssi;
-    }
-
     public int id() {
+
         return this.id;
     }
 
     public String name() {
+
         return this.name.trim();
     }
 
     public String address() {
+
         return this.address.trim();
     }
 
     public int rssi() {
+
         return this.rssi;
     }
 
     public BluetoothDevice device() {
+
         return this.device;
     }
 
     public boolean isConnectable() {
+
         return this.isConnectable;
     }
 
+    @SuppressWarnings("unused")
     public Map<ParcelUuid, byte[]> serviceData() {
+
         return this.serviceData;
+    }
+
+    public SparseArray<byte[]> mfgData() {
+
+        return this.mfgData;
     }
 
     public boolean equals(PeripheralDevice device) {

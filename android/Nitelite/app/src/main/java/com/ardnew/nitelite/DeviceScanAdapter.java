@@ -24,7 +24,6 @@
 
 package com.ardnew.nitelite;
 
-import android.os.ParcelUuid;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -38,6 +37,7 @@ import androidx.recyclerview.widget.RecyclerView;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class DeviceScanAdapter extends RecyclerView.Adapter<DeviceScanAdapter.ViewHolder> {
 
@@ -45,11 +45,13 @@ public class DeviceScanAdapter extends RecyclerView.Adapter<DeviceScanAdapter.Vi
 
     private final ScanActivity activity;
     private final List<PeripheralDevice> device;
+    private final ConcurrentHashMap<String, PeripheralDevice> deviceMap; // keyed on device address
 
     DeviceScanAdapter(@NonNull ScanActivity activity) {
 
         this.activity = activity;
         this.device = new ArrayList<>();
+        this.deviceMap = new ConcurrentHashMap<>();
     }
 
     @NonNull
@@ -76,18 +78,32 @@ public class DeviceScanAdapter extends RecyclerView.Adapter<DeviceScanAdapter.Vi
             device = new PeripheralDevice();
         }
 
-        holder.nameLabel.setText(Utility.format("%s", device.name()));
         holder.addressLabel.setText(device.address());
+
+        if ((null != device.name()) && (device.name().trim().length() > 0)) {
+            holder.nameLabel.setText(Utility.format("%s", device.name()));
+            holder.nameLabel.setVisibility(View.VISIBLE);
+        } else {
+            holder.nameLabel.setText("");
+            holder.nameLabel.setVisibility(View.GONE);
+        }
+
         holder.rssiLabel.setText(Utility.format("%d dBm", device.rssi()));
 
         holder.setIsExpanded(false, true);
         holder.setIsConnectable(device.isConnectable(), true);
 
-        ArrayList<String> services = new ArrayList<>();
-        for (ParcelUuid uuid : device.serviceData().keySet()) {
-            services.add(uuid.getUuid().toString());
+        String manufacturer = null;
+        if (device.mfgData().size() > 0) {
+            manufacturer = Nitelite.manufacturers().attribute(device.mfgData().keyAt(0));
         }
-        holder.setCharacteristics(services);
+        if ((null != manufacturer) && (manufacturer.trim().length() > 0)) {
+            holder.manufacturerLabel.setText(manufacturer);
+            holder.manufacturerLabel.setVisibility(View.VISIBLE);
+        } else {
+            holder.manufacturerLabel.setText("");
+            holder.manufacturerLabel.setVisibility(View.GONE);
+        }
     }
 
     @Override
@@ -99,23 +115,13 @@ public class DeviceScanAdapter extends RecyclerView.Adapter<DeviceScanAdapter.Vi
     @SuppressWarnings("WeakerAccess")
     public int count() {
 
-        synchronized (this.deviceLock) {
-            return this.device.size();
-        }
+        return this.deviceMap.size();
     }
 
     @SuppressWarnings("WeakerAccess")
     public PeripheralDevice get(String address) {
 
-        synchronized (this.deviceLock) {
-            for (int i = 0; i < this.device.size(); ++i) {
-                PeripheralDevice curr = this.device.get(i);
-                if ((null != curr) && address.equals(curr.address())) {
-                    return curr;
-                }
-            }
-        }
-        return null;
+        return this.deviceMap.get(address);
     }
 
     @SuppressWarnings("unused")
@@ -136,36 +142,39 @@ public class DeviceScanAdapter extends RecyclerView.Adapter<DeviceScanAdapter.Vi
 
         PeripheralDevice periph = this.get(scanResult.address());
         if (null == periph || rssi > periph.rssi()) {
+            PeripheralDevice insert;
             synchronized (this.deviceLock) {
 
-                int insertIndex = 0;
-                while (insertIndex < this.device.size() && this.device.get(insertIndex).rssi() >= rssi) {
-                    ++insertIndex;
+                int id = 0;
+                while (id < this.device.size() && this.device.get(id).rssi() >= rssi) {
+                    ++id;
                 }
 
-                PeripheralDevice insertPeriph = new PeripheralDevice(insertIndex, scanResult);
+                insert = new PeripheralDevice(id, scanResult);
 
                 if (null != periph) {
                     this.device.remove(periph.id());
-                    this.device.add(insertIndex, insertPeriph);
-                    this.notifyItemMoved(periph.id(), insertIndex);
-                    this.notifyItemChanged(insertIndex);
+                    this.device.add(id, insert);
+                    this.notifyItemMoved(periph.id(), id);
+                    this.notifyItemChanged(id);
                 } else {
-                    this.device.add(insertIndex, insertPeriph);
-                    this.notifyItemInserted(insertIndex);
+                    this.device.add(id, insert);
+                    this.notifyItemInserted(id);
                 }
 
                 // update ID for all items that were shifted over
-                for (int i = insertIndex + 1; i < this.device.size(); ++i) {
+                for (int i = id + 1; i < this.device.size(); ++i) {
                     this.device.get(i).setId(i);
                 }
             }
+            this.deviceMap.put(insert.address(), insert);
         }
     }
 
     @SuppressWarnings("WeakerAccess")
     public void clear() {
 
+        this.deviceMap.clear();
         synchronized (this.deviceLock) {
             this.device.clear();
             this.notifyDataSetChanged();
@@ -203,12 +212,13 @@ public class DeviceScanAdapter extends RecyclerView.Adapter<DeviceScanAdapter.Vi
         final TextView rssiLabel;
         final ImageView expandImage;
         final TextView nameLabel;
+        final TextView manufacturerLabel;
         final TextView characteristicsView;
         final Button connectButton;
 
-        boolean isExpanded;
         @SuppressWarnings("unused")
         boolean isConnectable;
+        boolean isExpanded;
 
         ViewHolder(@NonNull ScanActivity scanActivity, @NonNull View itemView) {
 
@@ -221,6 +231,7 @@ public class DeviceScanAdapter extends RecyclerView.Adapter<DeviceScanAdapter.Vi
             this.rssiLabel = itemView.findViewById(R.id.device_card_rssi_label);
             this.expandImage = itemView.findViewById(R.id.device_card_expand_image);
             this.nameLabel = itemView.findViewById(R.id.device_card_name_label);
+            this.manufacturerLabel = itemView.findViewById(R.id.device_card_manufacturer_label);
             this.characteristicsView = itemView.findViewById(R.id.device_card_characteristics_view);
             this.connectButton = itemView.findViewById(R.id.device_card_connect_button);
 
@@ -279,6 +290,7 @@ public class DeviceScanAdapter extends RecyclerView.Adapter<DeviceScanAdapter.Vi
             }
         }
 
+        @SuppressWarnings("SameParameterValue")
         private void setCharacteristics(List<String> characteristics) {
 
             this.characteristicsView.setText(Utility.join(characteristics, ViewHolder.TEXT_VIEW_NEWLINE));

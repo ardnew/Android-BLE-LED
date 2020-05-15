@@ -45,15 +45,14 @@
             android:id="@+id/device_card_title_layout"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
-            android:background="@color/color_primary_dark">
+            android:background="@color/color_primary_dark"
+            android:paddingHorizontal="@dimen/text_margin"
+            android:paddingVertical="8dp">
 
             <TextView
                 android:id="@+id/device_card_address_label"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginStart="16dp"
-                android:layout_marginTop="8dp"
-                android:layout_marginBottom="8dp"
                 android:text="Device address"
                 android:textAlignment="textStart"
                 android:textAppearance="@style/TextAppearance.AppCompat.Medium"
@@ -68,9 +67,7 @@
                 android:id="@+id/device_card_rssi_label"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="8dp"
-                android:layout_marginEnd="16dp"
-                android:layout_marginBottom="8dp"
+                android:layout_marginEnd="@dimen/text_margin"
                 android:text="RSSI"
                 android:textAppearance="@style/TextAppearance.AppCompat.Small"
                 android:textColor="@color/color_accent"
@@ -85,9 +82,6 @@
                 android:id="@+id/device_card_expand_image"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="8dp"
-                android:layout_marginEnd="8dp"
-                android:layout_marginBottom="8dp"
                 android:contentDescription="@string/device_card_expand_content_description"
                 android:rotation="0"
                 app:layout_constraintBottom_toBottomOf="parent"
@@ -110,8 +104,7 @@
                 android:id="@+id/device_card_name_label"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginStart="0dp"
-                android:layout_marginTop="0dp"
+                android:paddingBottom="8dp"
                 android:text="Device name"
                 android:textAlignment="textStart"
                 android:textAppearance="@style/TextAppearance.AppCompat.Small"
@@ -122,20 +115,32 @@
                 tools:ignore="HardcodedText" />
 
             <TextView
-                android:id="@+id/device_card_characteristics_view"
+                android:id="@+id/device_card_manufacturer_label"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_marginStart="0dp"
-                android:layout_marginTop="8dp"
-                android:layout_marginBottom="8dp"
-                android:text="Characteristic 1\nCharacteristic 2\nCharacteristic 3"
+                android:paddingBottom="8dp"
+                android:text="Manufacturer"
                 android:textAlignment="textStart"
                 android:textAppearance="@style/TextAppearance.AppCompat.Small"
                 android:textColor="@color/color_primary_text_dark"
                 android:textIsSelectable="false"
-                app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintStart_toStartOf="@id/device_card_name_label"
                 app:layout_constraintTop_toBottomOf="@id/device_card_name_label"
+                tools:ignore="HardcodedText" />
+
+            <TextView
+                android:id="@+id/device_card_characteristics_view"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:paddingBottom="8dp"
+                android:text="Characteristic 1\nCharacteristic 2\nCharacteristic 3"
+                android:textAlignment="textStart"
+                android:textAppearance="@style/TextAppearance.AppCompat.Small"
+                android:textColor="@color/color_accent"
+                android:textIsSelectable="false"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintStart_toStartOf="@id/device_card_name_label"
+                app:layout_constraintTop_toBottomOf="@id/device_card_manufacturer_label"
                 tools:ignore="HardcodedText" />
 
             <Button

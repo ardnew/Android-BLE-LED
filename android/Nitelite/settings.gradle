@@ -22,5 +22,5 @@
  *
  */
 
-rootProject.name='Nitelite'
+rootProject.name = 'Nitelite'
 include ':app'
