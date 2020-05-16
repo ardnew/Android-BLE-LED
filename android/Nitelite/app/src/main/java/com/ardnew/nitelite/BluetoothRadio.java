@@ -30,9 +30,7 @@ import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothManager;
 import android.bluetooth.le.BluetoothLeScanner;
-import android.bluetooth.le.ScanCallback;
 import android.bluetooth.le.ScanRecord;
-import android.bluetooth.le.ScanResult;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
@@ -57,21 +55,21 @@ class BluetoothRadio {
     private long scanDuration;
 
     private final ScanActivity scanActivity;
-    private final DeviceScanCallback scanCallback;
+    private final ScanCallback scanCallback;
     private final Handler scanHandler;
 
     private BluetoothManager bluetoothManager;
     private BluetoothAdapter bluetoothAdapter;
     private BluetoothLeScanner bluetoothScanner;
 
-    BluetoothRadio(ScanActivity scanActivity) throws BluetoothRadio.BluetoothNotSupportedException {
+    BluetoothRadio(ScanActivity scanActivity) throws NotSupportedException {
 
         this.isReady = false;
         this.isScanning = false;
         this.scanDuration = BluetoothRadio.SCAN_DURATION_MS;
 
         this.scanActivity = scanActivity;
-        this.scanCallback = new DeviceScanCallback(this.scanActivity);
+        this.scanCallback = new ScanCallback(this.scanActivity);
         this.scanHandler = new Handler();
 
         if (this.scanActivity.getPackageManager().hasSystemFeature(PackageManager.FEATURE_BLUETOOTH_LE)) {
@@ -79,7 +77,7 @@ class BluetoothRadio {
         }
 
         if (null == this.bluetoothManager) {
-            throw new BluetoothRadio.BluetoothNotSupportedException(
+            throw new NotSupportedException(
                     this.scanActivity
             );
         }
@@ -232,21 +230,21 @@ class BluetoothRadio {
         this.setIsReady(true);
     }
 
-    private static class DeviceScanCallback extends ScanCallback {
+    private static class ScanCallback extends android.bluetooth.le.ScanCallback {
 
         private final ScanActivity scanActivity;
 
-        DeviceScanCallback(@NonNull ScanActivity scanActivity) {
+        ScanCallback(@NonNull ScanActivity scanActivity) {
 
             this.scanActivity = scanActivity;
         }
 
         @Override
-        public void onScanResult(int callbackType, ScanResult result) {
+        public void onScanResult(int callbackType, android.bluetooth.le.ScanResult result) {
 
             super.onScanResult(callbackType, result);
             this.scanActivity.runOnUiThread(
-                    () -> this.scanActivity.onScanResult(new DeviceScanResult(result))
+                    () -> this.scanActivity.onScanResult(new ScanResult(result))
             );
         }
 
@@ -257,22 +255,22 @@ class BluetoothRadio {
         }
 
         @Override
-        public void onBatchScanResults(List<ScanResult> results) {
+        public void onBatchScanResults(List<android.bluetooth.le.ScanResult> results) {
 
             super.onBatchScanResults(results);
         }
     }
 
-    static class DeviceScanResult {
+    static class ScanResult {
 
-        private final ScanResult scanResult;
+        private final android.bluetooth.le.ScanResult scanResult;
 
-        DeviceScanResult(@NonNull ScanResult scanResult) {
+        ScanResult(@NonNull android.bluetooth.le.ScanResult scanResult) {
 
             this.scanResult = scanResult;
         }
 
-        ScanResult content() {
+        android.bluetooth.le.ScanResult content() {
 
             return this.scanResult;
         }
@@ -351,9 +349,9 @@ class BluetoothRadio {
         }
     }
 
-    static class BluetoothNotSupportedException extends UnsupportedOperationException {
+    static class NotSupportedException extends UnsupportedOperationException {
 
-        BluetoothNotSupportedException(AppCompatActivity context) {
+        NotSupportedException(AppCompatActivity context) {
 
             super(context.getResources().getString(R.string.exception_bluetooth_not_supported));
         }

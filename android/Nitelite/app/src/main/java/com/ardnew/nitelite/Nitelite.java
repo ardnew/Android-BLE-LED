@@ -26,7 +26,7 @@ package com.ardnew.nitelite;
 
 import android.app.Application;
 
-class Nitelite extends Application {
+public class Nitelite extends Application {
 
     private static transient BluetoothAttribute manufacturers;
     private static transient BluetoothAttribute standardServices;

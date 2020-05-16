@@ -25,15 +25,14 @@
 package com.ardnew.nitelite;
 
 import android.bluetooth.BluetoothDevice;
-import android.os.ParcelUuid;
+import android.os.Parcel;
+import android.os.Parcelable;
 import android.util.SparseArray;
 
 import androidx.annotation.NonNull;
 
-import java.util.Map;
-
 @SuppressWarnings("WeakerAccess")
-public class PeripheralDevice {
+public class PeripheralDevice implements Parcelable {
 
     public static final int INVALID_ID = -1;
     public static final String INVALID_NAME = "";
@@ -47,7 +46,6 @@ public class PeripheralDevice {
 
     private final BluetoothDevice device;
     private final boolean isConnectable;
-    private final Map<ParcelUuid, byte[]> serviceData;
     private final SparseArray<byte[]> mfgData;
 
     PeripheralDevice() {
@@ -59,11 +57,10 @@ public class PeripheralDevice {
 
         this.device = null;
         this.isConnectable = false;
-        this.serviceData = null;
         this.mfgData = null;
     }
 
-    PeripheralDevice(int id, BluetoothRadio.DeviceScanResult scanResult) {
+    PeripheralDevice(int id, BluetoothRadio.ScanResult scanResult) {
 
         this.id = id;
         this.name = scanResult.name();
@@ -72,9 +69,33 @@ public class PeripheralDevice {
 
         this.device = scanResult.device();
         this.isConnectable = scanResult.content().isConnectable();
-        this.serviceData = scanResult.scanRecord().getServiceData();
         this.mfgData = scanResult.scanRecord().getManufacturerSpecificData();
     }
+
+    protected PeripheralDevice(Parcel in) {
+
+        this.id = in.readInt();
+        this.name = in.readString();
+        this.address = in.readString();
+        this.rssi = in.readInt();
+
+        this.device = in.readParcelable(BluetoothDevice.class.getClassLoader());
+        this.isConnectable = in.readByte() != 0;
+        this.mfgData = in.readSparseArray(SparseArray.class.getClassLoader());
+    }
+
+    public static final Creator<PeripheralDevice> CREATOR = new Creator<PeripheralDevice>() {
+
+        @Override
+        public PeripheralDevice createFromParcel(Parcel in) {
+            return new PeripheralDevice(in);
+        }
+
+        @Override
+        public PeripheralDevice[] newArray(int size) {
+            return new PeripheralDevice[size];
+        }
+    };
 
     @NonNull
     @Override
@@ -128,12 +149,6 @@ public class PeripheralDevice {
         return this.isConnectable;
     }
 
-    @SuppressWarnings("unused")
-    public Map<ParcelUuid, byte[]> serviceData() {
-
-        return this.serviceData;
-    }
-
     public SparseArray<byte[]> mfgData() {
 
         return this.mfgData;
@@ -155,5 +170,24 @@ public class PeripheralDevice {
     public boolean isValid() {
 
         return !this.equals(new PeripheralDevice());
+    }
+
+    @Override
+    public int describeContents() {
+
+        return 0;
+    }
+
+    @Override
+    public void writeToParcel(Parcel dest, int flags) {
+
+        dest.writeInt(this.id);
+        dest.writeString(this.name);
+        dest.writeString(this.address);
+        dest.writeInt(this.rssi);
+
+        dest.writeParcelable(this.device, flags);
+        dest.writeByte((byte)(this.isConnectable ? 1 : 0));
+        dest.writeSparseArray(this.mfgData);
     }
 }

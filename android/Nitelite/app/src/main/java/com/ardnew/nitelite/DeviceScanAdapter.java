@@ -43,13 +43,13 @@ public class DeviceScanAdapter extends RecyclerView.Adapter<DeviceScanAdapter.Vi
 
     private final Object deviceLock = new Object();
 
-    private final ScanActivity activity;
+    private final ScanActivity scanActivity;
     private final List<PeripheralDevice> device;
     private final ConcurrentHashMap<String, PeripheralDevice> deviceMap; // keyed on device address
 
-    DeviceScanAdapter(@NonNull ScanActivity activity) {
+    DeviceScanAdapter(@NonNull ScanActivity scanActivity) {
 
-        this.activity = activity;
+        this.scanActivity = scanActivity;
         this.device = new ArrayList<>();
         this.deviceMap = new ConcurrentHashMap<>();
     }
@@ -62,7 +62,7 @@ public class DeviceScanAdapter extends RecyclerView.Adapter<DeviceScanAdapter.Vi
                 from(parent.getContext()).
                 inflate(R.layout.device_card, parent, false);
 
-        return new DeviceScanAdapter.ViewHolder(this.activity, itemView);
+        return new DeviceScanAdapter.ViewHolder(this.scanActivity, itemView);
     }
 
     @Override
@@ -92,6 +92,10 @@ public class DeviceScanAdapter extends RecyclerView.Adapter<DeviceScanAdapter.Vi
 
         holder.setIsExpanded(false, true);
         holder.setIsConnectable(device.isConnectable(), true);
+
+        holder.itemView.setOnClickListener(new ViewHolder.CardEventListener(holder));
+
+        holder.connectButton.setOnClickListener(new ConnectButtonEventListener(this, device));
 
         String manufacturer = null;
         if (device.mfgData().size() > 0) {
@@ -136,7 +140,7 @@ public class DeviceScanAdapter extends RecyclerView.Adapter<DeviceScanAdapter.Vi
     }
 
     @SuppressWarnings("WeakerAccess")
-    public void add(@NonNull BluetoothRadio.DeviceScanResult scanResult) {
+    public void add(@NonNull BluetoothRadio.ScanResult scanResult) {
 
         int rssi = scanResult.rssi();
 
@@ -189,12 +193,30 @@ public class DeviceScanAdapter extends RecyclerView.Adapter<DeviceScanAdapter.Vi
 
 
     @SuppressWarnings("unused")
-    static class PeripheralDeviceSortByRssi implements Comparator<PeripheralDevice> {
+    static class SortByRssi implements Comparator<PeripheralDevice> {
 
         @Override
         public int compare(PeripheralDevice p1, PeripheralDevice p2) {
 
             return p2.rssi() - p1.rssi();
+        }
+    }
+
+    static class ConnectButtonEventListener implements View.OnClickListener {
+
+        DeviceScanAdapter deviceScanAdapter;
+        PeripheralDevice device;
+
+        ConnectButtonEventListener(@NonNull DeviceScanAdapter deviceScanAdapter, @NonNull PeripheralDevice device) {
+
+            this.deviceScanAdapter = deviceScanAdapter;
+            this.device = device;
+        }
+
+        @Override
+        public void onClick(View v) {
+
+            this.deviceScanAdapter.scanActivity.onConnectButtonClick(this.device);
         }
     }
 
@@ -239,8 +261,6 @@ public class DeviceScanAdapter extends RecyclerView.Adapter<DeviceScanAdapter.Vi
 
             this.setIsExpanded(false, true);
             this.setIsConnectable(false, true);
-
-            this.itemView.setOnClickListener(new CardEventListener(this));
         }
 
         boolean isExpanded() {

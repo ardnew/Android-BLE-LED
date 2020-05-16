@@ -47,6 +47,7 @@ public class ScanActivity extends AppCompatActivity {
     public static final int REQUEST_DEVICE_SCAN = 0xD00D;
     public static final int SCAN_RESULT_OK = 0xB0;
     public static final int SCAN_RESULT_ERROR = 0xB1;
+    public static final int SCAN_RESULT_CONNECT = 0xB2;
 
     SearchView searchBar = null;
     @SuppressWarnings("WeakerAccess")
@@ -199,9 +200,16 @@ public class ScanActivity extends AppCompatActivity {
         this.scanningSnackBar.dismiss();
     }
 
-    void onScanResult(@NonNull BluetoothRadio.DeviceScanResult result) {
+    void onScanResult(@NonNull BluetoothRadio.ScanResult result) {
 
         this.scanAdapter.add(result);
+    }
+
+    void onConnectButtonClick(@NonNull PeripheralDevice device) {
+
+        this.bluetoothRadio.setIsScanning(false);
+        this.setResult(ScanActivity.SCAN_RESULT_CONNECT, ConnectionService.ConnectIntent.create(this, device));
+        this.finishAndRemoveTask();
     }
 
     private void displayFatalAlert(String title, String message) {
@@ -237,6 +245,7 @@ public class ScanActivity extends AppCompatActivity {
         @Override
         public void onClick(DialogInterface dialog, int which) {
 
+            this.activity.bluetoothRadio.setIsScanning(false);
             this.activity.finishAndRemoveTask();
         }
     }
