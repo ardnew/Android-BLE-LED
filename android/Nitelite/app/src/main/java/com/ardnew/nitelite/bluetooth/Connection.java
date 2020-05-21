@@ -140,11 +140,25 @@ public class Connection extends Service implements ColorObserver {
         );
     }
 
+    public boolean requestPixelColor() {
+
+        return this.handler.post(
+                () -> this.gattHandler.requestRgbLedPixel(this.bluetoothGatt)
+        );
+    }
+
+    public boolean requestPixelCount() {
+
+        return this.handler.post(
+                () -> this.gattHandler.requestRgbLedCount(this.bluetoothGatt)
+        );
+    }
+
     @Override
     public void onColor(int color, boolean fromUser, boolean shouldPropagate) {
 
         this.handler.post(
-                () -> this.gattHandler.transmitPixels(this.bluetoothGatt, 0, 30, color)
+                () -> this.gattHandler.transmitRgbLedPixel(this.bluetoothGatt, 0, this.gattHandler.pixelCount(), color)
         );
     }
 }

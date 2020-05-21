@@ -32,7 +32,6 @@ import android.content.Intent;
 import android.content.ServiceConnection;
 import android.os.Bundle;
 import android.os.IBinder;
-import android.util.Log;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
@@ -58,9 +57,12 @@ public class MainActivity extends AppCompatActivity {
 
     private ScrollView scrollView;
     private TabPager tabPager;
+    private ColorPickerView colorPickerView;
 
     private boolean isConnectedToDevice = false;
     private boolean isAutoUpdateEnabled = true;
+
+    private int pixelCount = 0;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -76,6 +78,7 @@ public class MainActivity extends AppCompatActivity {
 
         this.scrollView = this.findViewById(R.id.main_scroll_view);
         this.tabPager = this.findViewById(R.id.main_tab_pager);
+        this.colorPickerView = null;
 
         TabLayout tabLayout = this.findViewById(R.id.main_tab_layout);
         MainAdapter mainAdapter = new MainAdapter(this, tabLayout, tabLayout.getTabCount());
@@ -157,9 +160,9 @@ public class MainActivity extends AppCompatActivity {
                 );
         Toast.makeText(this, connectionNotice, Toast.LENGTH_SHORT).show();
 
-        ColorPickerView colorPickerView = this.findViewById(R.id.main_color_picker);
-        if (null != colorPickerView) {
-            colorPickerView.subscribe(this.connectionServiceDelegate.connection());
+        this.colorPickerView = this.findViewById(R.id.main_color_picker);
+        if (null != this.colorPickerView) {
+            this.colorPickerView.subscribe(this.connectionServiceDelegate.connection());
         }
 
         this.connectionServiceDelegate.discoverServices();
@@ -176,15 +179,26 @@ public class MainActivity extends AppCompatActivity {
                 );
         Toast.makeText(this, disconnectionNotice, Toast.LENGTH_SHORT).show();
 
-        ColorPickerView colorPickerView = this.findViewById(R.id.main_color_picker);
-        if (null != colorPickerView) {
-            colorPickerView.unsubscribe(this.connectionServiceDelegate.connection());
+        if (null != this.colorPickerView) {
+            this.colorPickerView.unsubscribe(this.connectionServiceDelegate.connection());
         }
     }
 
     public void onGattServicesDiscovered(@NonNull BluetoothGatt gatt) {
 
-        Log.d("services", gatt.getServices().toString());
+        this.connectionServiceDelegate.requestPixelCount();
+    }
+
+    public void setPixelColor(int color) {
+
+        if (null != this.colorPickerView) {
+            this.colorPickerView.setInitialColor(color);
+        }
+    }
+
+    public void setPixelCount(int pixelCount) {
+
+        this.pixelCount = Math.max(pixelCount, 0);
     }
 
     @Override
@@ -317,6 +331,22 @@ public class MainActivity extends AppCompatActivity {
 
             if (this.isServiceBound && (null != this.connectedDevice)) {
                 return this.connection.discoverServices();
+            }
+            return false;
+        }
+
+        boolean requestPixelColor() {
+
+            if (this.isServiceBound && (null != this.connectedDevice)) {
+                return this.connection.requestPixelColor();
+            }
+            return false;
+        }
+
+        boolean requestPixelCount() {
+
+            if (this.isServiceBound && (null != this.connectedDevice)) {
+                return this.connection.requestPixelCount();
             }
             return false;
         }
