@@ -22,13 +22,15 @@
  -                                                                            -
  -----------------------------------------------------------------------------*/
 
-package com.ardnew.nitelite;
+package com.ardnew.nitelite.bluetooth;
 
 import android.content.Context;
 import android.content.res.AssetManager;
 import android.util.Log;
 
 import androidx.annotation.NonNull;
+
+import com.ardnew.nitelite.Utility;
 
 import java.io.InputStream;
 import java.util.Enumeration;
@@ -37,19 +39,19 @@ import java.util.Properties;
 
 import static android.content.res.AssetManager.ACCESS_BUFFER;
 
-class BluetoothAttribute {
+public class Manufacturer {
 
     @SuppressWarnings("FieldCanBeLocal")
     private final Properties properties;
-    private final HashMap<Integer, String> attributeMap;
+    private final HashMap<Integer, String> manufacturerMap;
 
     @SuppressWarnings("SameParameterValue")
-    BluetoothAttribute(@NonNull Context context, String properties, String keyPrefix) {
+    public Manufacturer(@NonNull Context context, String properties, String keyPrefix) {
 
         AssetManager assetManager = context.getAssets();
 
         this.properties = new Properties();
-        this.attributeMap = new HashMap<>();
+        this.manufacturerMap = new HashMap<>();
 
         try (InputStream inputStream = assetManager.open(properties, ACCESS_BUFFER)) {
 
@@ -72,7 +74,7 @@ class BluetoothAttribute {
                     Integer uintKey = Utility.parseUint(subkey);
 
                     if (Utility.isValidUint(uintKey)) {
-                        this.attributeMap.put(uintKey, this.properties.getProperty(key));
+                        this.manufacturerMap.put(uintKey, this.properties.getProperty(key));
                     }
                 }
             }
@@ -82,18 +84,18 @@ class BluetoothAttribute {
     }
 
     @SuppressWarnings("unused")
-    HashMap<Integer, String> attributeMap() {
+    HashMap<Integer, String> manufacturerMap() {
 
-        return this.attributeMap;
+        return this.manufacturerMap;
     }
 
-    String attribute(Integer key) {
+    public String manufacturer(Integer key) {
 
-        if (!this.attributeMap.containsKey(key)) {
+        if (!this.manufacturerMap.containsKey(key)) {
             return null; // key actually does not exist.
         }
 
-        String attr = this.attributeMap.get(key);
+        String attr = this.manufacturerMap.get(key);
 
         if (null == attr) {
             return ""; // replace with empty string if key exists but maps to null.

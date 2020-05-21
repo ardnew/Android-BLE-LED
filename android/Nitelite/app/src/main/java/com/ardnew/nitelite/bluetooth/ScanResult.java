@@ -22,49 +22,77 @@
  -                                                                            -
  -----------------------------------------------------------------------------*/
 
-package com.ardnew.nitelite;
+package com.ardnew.nitelite.bluetooth;
 
-import android.app.Application;
+import android.bluetooth.BluetoothDevice;
+import android.bluetooth.le.ScanRecord;
 
-import com.ardnew.nitelite.bluetooth.Manufacturer;
-import com.ardnew.nitelite.bluetooth.ServiceUuid;
+import androidx.annotation.NonNull;
 
-public class Nitelite extends Application {
+public class ScanResult {
 
-    private static transient Manufacturer manufacturers;
-    private static transient ServiceUuid standardServices;
-    private static transient ServiceUuid memberServices;
-    private static transient ServiceUuid niteliteServices;
+    private final android.bluetooth.le.ScanResult scanResult;
 
-    public void onCreate() {
+    ScanResult(@NonNull android.bluetooth.le.ScanResult scanResult) {
 
-        super.onCreate();
-
-        Nitelite.manufacturers = new Manufacturer(this.getApplicationContext(), "manufacturers.properties", "manufacturer");
-        Nitelite.standardServices = new ServiceUuid(this.getApplicationContext(), "services.properties", "service.standard");
-        Nitelite.memberServices = new ServiceUuid(this.getApplicationContext(), "services.properties", "service.member");
-        Nitelite.niteliteServices = new ServiceUuid(this.getApplicationContext(), "services.properties", "service.nitelite");
+        this.scanResult = scanResult;
     }
 
-    public static Manufacturer manufacturers() {
+    public android.bluetooth.le.ScanResult content() {
 
-        return Nitelite.manufacturers;
+        return this.scanResult;
     }
 
-    @SuppressWarnings("unused")
-    public static ServiceUuid standardServices() {
+    public BluetoothDevice device() {
 
-        return Nitelite.standardServices;
+        return this.scanResult.getDevice();
     }
 
-    @SuppressWarnings("unused")
-    public static ServiceUuid memberServices() {
+    ScanRecord scanRecord() {
 
-        return Nitelite.memberServices;
+        return this.scanResult.getScanRecord();
     }
 
-    public static ServiceUuid niteliteServices() {
+    public String name() {
 
-        return Nitelite.niteliteServices;
+        BluetoothDevice device = this.scanResult.getDevice();
+        String name = null;
+
+        if (null != device) {
+            name = device.getName();
+            if ((null == name) || (0 == name.trim().length())) {
+                ScanRecord scanRecord = this.scanResult.getScanRecord();
+                if (null != scanRecord) {
+                    name = this.scanResult.getScanRecord().getDeviceName();
+                }
+            }
+        }
+
+        if (null == name) {
+            name = Device.INVALID_NAME;
+        }
+
+        return name;
+    }
+
+    public String address() {
+
+        BluetoothDevice device = this.scanResult.getDevice();
+        String address = null;
+
+        if (null != device) {
+            address = device.getAddress();
+        }
+
+        if (null == address) {
+            address = Device.INVALID_ADDRESS;
+        }
+
+        return address;
+    }
+
+    public int rssi() {
+
+        return this.scanResult.getRssi();
     }
 }

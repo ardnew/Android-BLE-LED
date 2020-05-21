@@ -24,47 +24,51 @@
 
 package com.ardnew.nitelite;
 
-import android.app.Application;
+import android.content.Context;
+import android.util.AttributeSet;
+import android.view.MotionEvent;
+import android.view.ViewConfiguration;
 
-import com.ardnew.nitelite.bluetooth.Manufacturer;
-import com.ardnew.nitelite.bluetooth.ServiceUuid;
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.core.widget.NestedScrollView;
 
-public class Nitelite extends Application {
+public class ScrollView extends NestedScrollView {
 
-    private static transient Manufacturer manufacturers;
-    private static transient ServiceUuid standardServices;
-    private static transient ServiceUuid memberServices;
-    private static transient ServiceUuid niteliteServices;
+    private boolean isScrolling;
+    private float touchSlop;
+    private float touchDown;
 
-    public void onCreate() {
+    public ScrollView(@NonNull Context context) {
 
-        super.onCreate();
+        super(context);
 
-        Nitelite.manufacturers = new Manufacturer(this.getApplicationContext(), "manufacturers.properties", "manufacturer");
-        Nitelite.standardServices = new ServiceUuid(this.getApplicationContext(), "services.properties", "service.standard");
-        Nitelite.memberServices = new ServiceUuid(this.getApplicationContext(), "services.properties", "service.member");
-        Nitelite.niteliteServices = new ServiceUuid(this.getApplicationContext(), "services.properties", "service.nitelite");
+        this.init();
     }
 
-    public static Manufacturer manufacturers() {
+    public ScrollView(@NonNull Context context, @Nullable AttributeSet attrs) {
 
-        return Nitelite.manufacturers;
+        super(context, attrs);
+
+        this.init();
     }
 
-    @SuppressWarnings("unused")
-    public static ServiceUuid standardServices() {
+    public ScrollView(@NonNull Context context, @Nullable AttributeSet attrs, int defStyleAttr) {
 
-        return Nitelite.standardServices;
+        super(context, attrs, defStyleAttr);
+
+        this.init();
     }
 
-    @SuppressWarnings("unused")
-    public static ServiceUuid memberServices() {
+    private void init() {
 
-        return Nitelite.memberServices;
+        ViewConfiguration vc = ViewConfiguration.get(this.getContext());
+		this.touchSlop = vc.getScaledTouchSlop();
     }
 
-    public static ServiceUuid niteliteServices() {
+    @Override
+    public boolean onInterceptTouchEvent(MotionEvent ev) {
 
-        return Nitelite.niteliteServices;
+		return false;
     }
 }

@@ -70,7 +70,7 @@
                 android:layout_marginEnd="@dimen/text_margin"
                 android:text="RSSI"
                 android:textAppearance="@style/TextAppearance.AppCompat.Small"
-                android:textColor="@color/color_accent"
+                android:textColor="@color/color_accent_alt"
                 android:textIsSelectable="false"
                 android:textSize="12sp"
                 app:layout_constraintBottom_toBottomOf="parent"
@@ -147,6 +147,7 @@
                 android:id="@+id/device_card_connect_button"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:backgroundTint="@color/color_accent_button"
                 android:text="@string/device_card_connect_button_text"
                 app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintEnd_toEndOf="parent" />

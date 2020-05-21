@@ -35,36 +35,36 @@ import java.util.List;
 import java.util.ListIterator;
 import java.util.Locale;
 
-class Utility {
+@SuppressWarnings("WeakerAccess")
+public class Utility {
 
     private static final int INVALID_UINT = -1;
 
     static void dismissKeyboard(AppCompatActivity activity, View sender) {
 
-        InputMethodManager manager = (InputMethodManager) activity.getSystemService(Activity.INPUT_METHOD_SERVICE);
+        InputMethodManager manager = (InputMethodManager)activity.getSystemService(Activity.INPUT_METHOD_SERVICE);
         if (null != manager) {
             manager.hideSoftInputFromWindow(sender.getWindowToken(), 0);
         }
     }
 
-    @SuppressWarnings("WeakerAccess")
-    static Locale locale() {
+    public static Locale locale() {
 
         return Locale.getDefault();
     }
 
-    static String format(@NonNull String format, Object... args) {
+    public static String format(@NonNull String format, Object... args) {
 
         return String.format(Utility.locale(), format, args);
     }
 
-    static String lowerCase(@NonNull String string) {
+    public static String lowerCase(@NonNull String string) {
 
         return string.toLowerCase(Utility.locale());
     }
 
     @SuppressWarnings("SameParameterValue")
-    static String join(List<String> list, String separator) {
+    public static String join(List<String> list, String separator) {
 
         if (null == list) {
             return null;
@@ -88,13 +88,12 @@ class Utility {
         }
     }
 
-    static boolean isValidUint(int uint) {
+    public static boolean isValidUint(int uint) {
 
         return uint >= 0;
     }
 
-    @SuppressWarnings("WeakerAccess")
-    static Integer parseUint(@NonNull String string, int base) {
+    public static Integer parseUint(@NonNull String string, int base) {
 
         int uint;
 
@@ -107,7 +106,7 @@ class Utility {
         return uint;
     }
 
-    static Integer parseUint(@NonNull String string) {
+    public static Integer parseUint(@NonNull String string) {
 
         string = string.trim();
 

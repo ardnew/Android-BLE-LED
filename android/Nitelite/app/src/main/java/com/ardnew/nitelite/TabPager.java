@@ -24,47 +24,44 @@
 
 package com.ardnew.nitelite;
 
-import android.app.Application;
+import android.content.Context;
+import android.util.AttributeSet;
+import android.view.MotionEvent;
+import android.view.ViewConfiguration;
 
-import com.ardnew.nitelite.bluetooth.Manufacturer;
-import com.ardnew.nitelite.bluetooth.ServiceUuid;
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.viewpager.widget.ViewPager;
 
-public class Nitelite extends Application {
+public class TabPager extends ViewPager {
 
-    private static transient Manufacturer manufacturers;
-    private static transient ServiceUuid standardServices;
-    private static transient ServiceUuid memberServices;
-    private static transient ServiceUuid niteliteServices;
+    private boolean isScrolling;
+    private float touchSlop;
+    private float touchDown;
 
-    public void onCreate() {
+    public TabPager(@NonNull Context context) {
 
-        super.onCreate();
+        super(context);
 
-        Nitelite.manufacturers = new Manufacturer(this.getApplicationContext(), "manufacturers.properties", "manufacturer");
-        Nitelite.standardServices = new ServiceUuid(this.getApplicationContext(), "services.properties", "service.standard");
-        Nitelite.memberServices = new ServiceUuid(this.getApplicationContext(), "services.properties", "service.member");
-        Nitelite.niteliteServices = new ServiceUuid(this.getApplicationContext(), "services.properties", "service.nitelite");
+        this.init();
     }
 
-    public static Manufacturer manufacturers() {
+    public TabPager(@NonNull Context context, @Nullable AttributeSet attrs) {
 
-        return Nitelite.manufacturers;
+        super(context, attrs);
+
+        this.init();
     }
 
-    @SuppressWarnings("unused")
-    public static ServiceUuid standardServices() {
+    private void init() {
 
-        return Nitelite.standardServices;
+        ViewConfiguration vc = ViewConfiguration.get(this.getContext());
+		this.touchSlop = vc.getScaledTouchSlop();
     }
 
-    @SuppressWarnings("unused")
-    public static ServiceUuid memberServices() {
+    @Override
+    public boolean onInterceptTouchEvent(MotionEvent ev) {
 
-        return Nitelite.memberServices;
-    }
-
-    public static ServiceUuid niteliteServices() {
-
-        return Nitelite.niteliteServices;
+		return false;
     }
 }

@@ -77,12 +77,12 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_margin="@dimen/fab_margin"
-        android:backgroundTint="@color/color_accent"
+        android:backgroundTint="@color/color_accent_alt"
         android:scaleType="centerInside"
         android:scaleX=".8"
         android:scaleY=".8"
         app:layout_anchor="@id/scan_recycler_view"
-        app:layout_anchorGravity="bottom|end"
+        app:layout_anchorGravity="bottom|center_horizontal"
         app:maxImageSize="40dp"
         app:srcCompat="@android:drawable/stat_notify_sync" />
 

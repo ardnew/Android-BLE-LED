@@ -24,6 +24,8 @@
 
 package com.ardnew.nitelite;
 
+import android.bluetooth.BluetoothDevice;
+import android.bluetooth.BluetoothGatt;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
@@ -34,15 +36,31 @@ import android.util.Log;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
+import android.view.MotionEvent;
+import android.view.View;
+import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 
+import com.ardnew.nitelite.bluetooth.ConnectIntent;
+import com.ardnew.nitelite.bluetooth.Connection;
+import com.ardnew.nitelite.bluetooth.GattHandler;
+import com.google.android.material.tabs.TabLayout;
+
+import top.defaults.colorpicker.ColorPickerView;
+
 public class MainActivity extends AppCompatActivity {
 
-    private ConnectionServiceConnection connectionServiceConnection;
+    private ConnectionServiceDelegate connectionServiceDelegate;
+
+    private ScrollView scrollView;
+    private TabPager tabPager;
+
+    private boolean isConnectedToDevice = false;
+    private boolean isAutoUpdateEnabled = true;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -54,15 +72,48 @@ public class MainActivity extends AppCompatActivity {
         Toolbar toolBar = this.findViewById(R.id.main_toolbar);
         this.setSupportActionBar(toolBar);
 
-        this.connectionServiceConnection = new ConnectionServiceConnection(this);
+        this.connectionServiceDelegate = ConnectionServiceDelegate.create(this);
+
+        this.scrollView = this.findViewById(R.id.main_scroll_view);
+        this.tabPager = this.findViewById(R.id.main_tab_pager);
+
+        TabLayout tabLayout = this.findViewById(R.id.main_tab_layout);
+        MainAdapter mainAdapter = new MainAdapter(this, tabLayout, tabLayout.getTabCount());
+        tabPager.setAdapter(mainAdapter);
+        //viewPager.addOnPageChangeListener(new TabLayout.TabLayoutOnPageChangeListener(tabLayout));
     }
 
+    @Override
+    protected void onDestroy() {
+
+        super.onDestroy();
+
+        this.connectionServiceDelegate.onDestroy();
+    }
+
+    @SuppressWarnings("EmptyMethod")
+    @Override
+    protected void onStart() {
+
+        super.onStart();
+    }
+
+     @SuppressWarnings("EmptyMethod")
     @Override
     protected void onStop() {
 
         super.onStop();
+    }
 
-        this.connectionServiceConnection.disconnect();
+    @Override
+    public boolean dispatchTouchEvent(MotionEvent ev) {
+
+        View focusedView = this.getCurrentFocus();
+        if (null != focusedView) {
+            Utility.dismissKeyboard(this, focusedView);
+            focusedView.clearFocus();
+        }
+        return super.dispatchTouchEvent(ev);
     }
 
     @Override
@@ -77,28 +128,63 @@ public class MainActivity extends AppCompatActivity {
 
                 switch (resultCode) {
 
-                    case ScanActivity.SCAN_RESULT_OK:
-                        Log.d("scan-activity", Utility.format("result = %d", resultCode));
-                        break;
-
                     case ScanActivity.SCAN_RESULT_CONNECT:
                         if (null != intent) {
-                            PeripheralDevice device = ConnectionService.ConnectIntent.deviceToConnect(intent);
+                            BluetoothDevice device = ConnectIntent.getDevice(intent);
                             if (null != device) {
-                                Log.d("connect-to-device", device.address());
-                                if (!this.connectionServiceConnection.connect(intent)) {
-                                    Log.d("connect-to-device-success", device.address());
-                                }
+                                this.connectionServiceDelegate.connectToDevice(device);
                             }
                         }
                         break;
 
+                    case ScanActivity.SCAN_RESULT_OK:
                     case ScanActivity.SCAN_RESULT_ERROR:
                     default:
                         break;
                 }
                 break;
         }
+    }
+
+    public void onGattDeviceConnected(@NonNull BluetoothGatt gatt) {
+
+        this.isConnectedToDevice = true;
+
+        String connectionNotice =
+                Utility.format(
+                        this.getString(R.string.connected_toast_format),
+                        this.connectionServiceDelegate.connectedDevice.getAddress()
+                );
+        Toast.makeText(this, connectionNotice, Toast.LENGTH_SHORT).show();
+
+        ColorPickerView colorPickerView = this.findViewById(R.id.main_color_picker);
+        if (null != colorPickerView) {
+            colorPickerView.subscribe(this.connectionServiceDelegate.connection());
+        }
+
+        this.connectionServiceDelegate.discoverServices();
+    }
+
+    public void onGattDeviceDisconnected(@NonNull BluetoothGatt gatt) {
+
+        this.isConnectedToDevice = false;
+
+        String disconnectionNotice =
+                Utility.format(
+                        this.getString(R.string.disconnected_toast_format),
+                        this.connectionServiceDelegate.lastDeviceAddress()
+                );
+        Toast.makeText(this, disconnectionNotice, Toast.LENGTH_SHORT).show();
+
+        ColorPickerView colorPickerView = this.findViewById(R.id.main_color_picker);
+        if (null != colorPickerView) {
+            colorPickerView.unsubscribe(this.connectionServiceDelegate.connection());
+        }
+    }
+
+    public void onGattServicesDiscovered(@NonNull BluetoothGatt gatt) {
+
+        Log.d("services", gatt.getServices().toString());
     }
 
     @Override
@@ -111,9 +197,17 @@ public class MainActivity extends AppCompatActivity {
     }
 
     @Override
+    public boolean onPrepareOptionsMenu(Menu menu) {
+
+        MenuItem disconnectMenuItem = menu.findItem(R.id.disconnect_menu_item);
+        disconnectMenuItem.setVisible(this.isConnectedToDevice);
+
+        return super.onPrepareOptionsMenu(menu);
+    }
+
+    @Override
     public boolean onOptionsItemSelected(MenuItem item) {
 
-        //noinspection SwitchStatementWithTooFewBranches
         switch (item.getItemId()) {
 
             case R.id.scan_menu_item:
@@ -123,58 +217,118 @@ public class MainActivity extends AppCompatActivity {
                 );
                 return true;
 
+            case R.id.disconnect_menu_item:
+                if (this.isConnectedToDevice) {
+                    this.connectionServiceDelegate.disconnectFromDevice();
+                }
+
             default:
                 return super.onOptionsItemSelected(item);
         }
     }
 
-    static class ConnectionServiceConnection implements ServiceConnection {
+    public ScrollView scrollView() {
+
+        return this.scrollView;
+    }
+
+    public TabPager tabPager() {
+
+        return this.tabPager;
+    }
+
+    static class ConnectionServiceDelegate implements ServiceConnection {
 
         private final MainActivity mainActivity;
-        private ConnectionService connectionService;
-        private boolean connectionServiceBound;
+        private final Intent serviceIntent;
 
-        ConnectionServiceConnection(MainActivity mainActivity) {
+        private Connection connection;
+        private boolean isServiceBound;
+        private BluetoothDevice connectedDevice;
+        private String lastDeviceAddress;
 
-            super();
+        static ConnectionServiceDelegate create(@NonNull MainActivity mainActivity) {
+
+            return new ConnectionServiceDelegate(mainActivity);
+        }
+
+        ConnectionServiceDelegate(MainActivity mainActivity) {
 
             this.mainActivity = mainActivity;
-            this.connectionService = null;
-            this.connectionServiceBound = false;
+            this.connection = null;
+            this.isServiceBound = false;
+            this.connectedDevice = null;
+            this.lastDeviceAddress = null;
+
+            this.serviceIntent = ConnectIntent.initConnection(this.mainActivity.getApplicationContext());
+            this.mainActivity.startService(this.serviceIntent);
+            this.mainActivity.bindService(this.serviceIntent, this, Context.BIND_IMPORTANT);
         }
 
-        public boolean connect(@NonNull Intent intent) {
+        void onDestroy() {
 
-            this.disconnect();
-
-            ComponentName serviceName = this.mainActivity.startService(intent);
-            if (null != serviceName) {
-                return this.mainActivity.bindService(intent, this, Context.BIND_IMPORTANT);
-            } else {
-                return false;
-            }
-        }
-
-        void disconnect() {
-
-            if (this.connectionServiceBound) {
-                this.connectionService.stopService(this);
-            }
+            this.mainActivity.unbindService(this);
+            this.mainActivity.stopService(this.serviceIntent);
         }
 
         @Override
         public void onServiceConnected(ComponentName name, IBinder service) {
 
-            ConnectionService.ConnectionBinder binder = (ConnectionService.ConnectionBinder)service;
-            this.connectionService = binder.getService();
-            this.connectionServiceBound = true;
+            Connection.ServiceBinder binder = (Connection.ServiceBinder)service;
+            this.connection = binder.getService();
+            this.connection.setGattHandler(new GattHandler(this.mainActivity));
+            this.isServiceBound = true;
         }
 
         @Override
         public void onServiceDisconnected(ComponentName name) {
 
-            this.connectionService = null;
-            this.connectionServiceBound = false;
+            this.isServiceBound = false;
+        }
+
+        @SuppressWarnings("UnusedReturnValue")
+        boolean connectToDevice(BluetoothDevice bluetoothDevice) {
+
+            if (this.isServiceBound) {
+                if ((null == this.connectedDevice) || this.disconnectFromDevice()) {
+                    if (this.connection.connectToDevice(bluetoothDevice)) {
+                        this.connectedDevice = bluetoothDevice;
+                        this.lastDeviceAddress = bluetoothDevice.getAddress();
+                        return true;
+                    }
+                }
+            }
+            return false;
+        }
+
+        boolean disconnectFromDevice() {
+
+            if (this.isServiceBound && (null != this.connectedDevice)) {
+                if (this.connection.disconnectFromDevice()) {
+                    this.connectedDevice = null;
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        @SuppressWarnings("UnusedReturnValue")
+        boolean discoverServices() {
+
+            if (this.isServiceBound && (null != this.connectedDevice)) {
+                return this.connection.discoverServices();
+            }
+            return false;
+        }
+
+        Connection connection() {
+
+            return this.connection;
+        }
+
+        String lastDeviceAddress() {
+
+            return this.lastDeviceAddress;
         }
     }
 

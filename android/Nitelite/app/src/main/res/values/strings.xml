@@ -23,6 +23,7 @@
   -->
 
 <resources xmlns:tools="http://schemas.android.com/tools">
+
     <string name="app_name">Nitelite</string>
 
     <string name="service_connection_description">Provides a persistent Bluetooth (LE) interface for maintaining communication with a Nitelite device.</string>
@@ -31,8 +32,17 @@
     <string name="title_activity_main">@string/app_name</string>
     <string name="title_activity_scan">Nearby devices</string>
 
-    <string name="scan_menu_text">Connect to device…</string>
     <string name="scan_begin_text">Scanning for nearby Bluetooth (LE) devices…</string>
+    <string name="connected_toast_format">Connected (%s)</string>
+    <string name="disconnected_toast_format">Disconnected (%s)</string>
+
+    <string name="scan_menu_text">Connect to device…</string>
+    <string name="disconnect_menu_text">Disconnect</string>
+
+    <string name="main_tab_color_picker">Color</string>
+    <string name="main_tab_color_pattern">Pattern</string>
+
+    <string name="auto_update_button_text">Auto Update</string>
 
     <string name="scan_permission_request">Scanning for Bluetooth (LE) peripheral devices on Android requires location services permission.</string>
 

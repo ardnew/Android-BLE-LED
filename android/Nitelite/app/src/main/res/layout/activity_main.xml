@@ -22,7 +22,8 @@
   ~
   -->
 
-<androidx.coordinatorlayout.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.coordinatorlayout.widget.CoordinatorLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
@@ -41,8 +42,10 @@
             android:background="@color/color_primary_dark"
             android:theme="@style/AppTheme.ToolbarLayout"
             app:contentScrim="@color/color_primary"
-            app:layout_scrollFlags="scroll|exitUntilCollapsed|snap"
+            app:layout_scrollFlags="snapMargins|scroll|exitUntilCollapsed|snap"
             app:statusBarScrim="@color/color_primary_dark"
+            app:title="Nitelite"
+            app:titleEnabled="true"
             app:toolbarId="@+id/main_toolbar">
 
             <androidx.appcompat.widget.Toolbar
@@ -59,9 +62,49 @@
 
     </com.google.android.material.appbar.AppBarLayout>
 
-    <androidx.core.widget.NestedScrollView
+    <com.ardnew.nitelite.ScrollView
+        android:id="@+id/main_scroll_view"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        app:layout_behavior="com.google.android.material.appbar.AppBarLayout$ScrollingViewBehavior" />
+        android:measureAllChildren="true"
+        android:fillViewport="true"
+        app:layout_behavior="com.google.android.material.appbar.AppBarLayout$ScrollingViewBehavior">
+
+        <com.ardnew.nitelite.TabPager
+            android:id="@+id/main_tab_pager"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent">
+
+            <com.google.android.material.tabs.TabLayout
+                android:id="@+id/main_tab_layout"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                app:tabGravity="fill"
+                app:tabMode="fixed">
+
+                <com.google.android.material.tabs.TabItem
+                    android:id="@+id/main_tab_color_picker"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/main_tab_color_picker">
+
+                </com.google.android.material.tabs.TabItem>
+
+                <com.google.android.material.tabs.TabItem
+                    android:id="@+id/main_tab_color_pattern"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/main_tab_color_pattern">
+
+                </com.google.android.material.tabs.TabItem>
+
+            </com.google.android.material.tabs.TabLayout>
+
+
+        </com.ardnew.nitelite.TabPager>
+
+    </com.ardnew.nitelite.ScrollView>
+
+
 
 </androidx.coordinatorlayout.widget.CoordinatorLayout>

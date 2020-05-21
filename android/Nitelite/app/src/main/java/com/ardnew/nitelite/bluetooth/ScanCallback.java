@@ -22,49 +22,41 @@
  -                                                                            -
  -----------------------------------------------------------------------------*/
 
-package com.ardnew.nitelite;
+package com.ardnew.nitelite.bluetooth;
 
-import android.app.Application;
+import androidx.annotation.NonNull;
 
-import com.ardnew.nitelite.bluetooth.Manufacturer;
-import com.ardnew.nitelite.bluetooth.ServiceUuid;
+import com.ardnew.nitelite.ScanActivity;
 
-public class Nitelite extends Application {
+import java.util.List;
 
-    private static transient Manufacturer manufacturers;
-    private static transient ServiceUuid standardServices;
-    private static transient ServiceUuid memberServices;
-    private static transient ServiceUuid niteliteServices;
+class ScanCallback extends android.bluetooth.le.ScanCallback {
 
-    public void onCreate() {
+    private final ScanActivity scanActivity;
 
-        super.onCreate();
+    ScanCallback(@NonNull ScanActivity scanActivity) {
 
-        Nitelite.manufacturers = new Manufacturer(this.getApplicationContext(), "manufacturers.properties", "manufacturer");
-        Nitelite.standardServices = new ServiceUuid(this.getApplicationContext(), "services.properties", "service.standard");
-        Nitelite.memberServices = new ServiceUuid(this.getApplicationContext(), "services.properties", "service.member");
-        Nitelite.niteliteServices = new ServiceUuid(this.getApplicationContext(), "services.properties", "service.nitelite");
+        this.scanActivity = scanActivity;
     }
 
-    public static Manufacturer manufacturers() {
+    @Override
+    public void onScanResult(int callbackType, android.bluetooth.le.ScanResult result) {
 
-        return Nitelite.manufacturers;
+        super.onScanResult(callbackType, result);
+        this.scanActivity.runOnUiThread(
+                () -> this.scanActivity.onScanResult(new ScanResult(result))
+        );
     }
 
-    @SuppressWarnings("unused")
-    public static ServiceUuid standardServices() {
+    @Override
+    public void onScanFailed(int errorCode) {
 
-        return Nitelite.standardServices;
+        super.onScanFailed(errorCode);
     }
 
-    @SuppressWarnings("unused")
-    public static ServiceUuid memberServices() {
+    @Override
+    public void onBatchScanResults(List<android.bluetooth.le.ScanResult> results) {
 
-        return Nitelite.memberServices;
-    }
-
-    public static ServiceUuid niteliteServices() {
-
-        return Nitelite.niteliteServices;
+        super.onBatchScanResults(results);
     }
 }

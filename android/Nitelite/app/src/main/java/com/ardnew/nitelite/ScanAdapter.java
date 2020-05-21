@@ -34,20 +34,23 @@ import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.ardnew.nitelite.bluetooth.Device;
+import com.ardnew.nitelite.bluetooth.ScanResult;
+
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 
-public class DeviceScanAdapter extends RecyclerView.Adapter<DeviceScanAdapter.ViewHolder> {
+public class ScanAdapter extends RecyclerView.Adapter<ScanAdapter.ViewHolder> {
 
     private final Object deviceLock = new Object();
 
     private final ScanActivity scanActivity;
-    private final List<PeripheralDevice> device;
-    private final ConcurrentHashMap<String, PeripheralDevice> deviceMap; // keyed on device address
+    private final List<Device> device;
+    private final ConcurrentHashMap<String, Device> deviceMap; // keyed on device address
 
-    DeviceScanAdapter(@NonNull ScanActivity scanActivity) {
+    ScanAdapter(@NonNull ScanActivity scanActivity) {
 
         this.scanActivity = scanActivity;
         this.device = new ArrayList<>();
@@ -56,26 +59,26 @@ public class DeviceScanAdapter extends RecyclerView.Adapter<DeviceScanAdapter.Vi
 
     @NonNull
     @Override
-    public DeviceScanAdapter.ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
+    public ScanAdapter.ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
 
         View itemView = LayoutInflater.
                 from(parent.getContext()).
                 inflate(R.layout.device_card, parent, false);
 
-        return new DeviceScanAdapter.ViewHolder(this.scanActivity, itemView);
+        return new ScanAdapter.ViewHolder(this.scanActivity, itemView);
     }
 
     @Override
-    public void onBindViewHolder(@NonNull DeviceScanAdapter.ViewHolder holder, int position) {
+    public void onBindViewHolder(@NonNull ScanAdapter.ViewHolder holder, int position) {
 
-        PeripheralDevice device;
+        Device device;
 
         try {
             synchronized (this.deviceLock) {
                 device = this.device.get(position);
             }
         } catch (Exception ex) {
-            device = new PeripheralDevice();
+            device = new Device();
         }
 
         holder.addressLabel.setText(device.address());
@@ -91,15 +94,23 @@ public class DeviceScanAdapter extends RecyclerView.Adapter<DeviceScanAdapter.Vi
         holder.rssiLabel.setText(Utility.format("%d dBm", device.rssi()));
 
         holder.setIsExpanded(false, true);
-        holder.setIsConnectable(device.isConnectable(), true);
+        holder.setIsConnectable(device.isConnectable() && device.hasNiteliteServices(), true);
 
-        holder.itemView.setOnClickListener(new ViewHolder.CardEventListener(holder));
+        holder.itemView.setOnClickListener(
+                v -> {
+                    holder.scanActivity.searchBar.clearFocus();
+                    holder.setIsExpanded(!holder.isExpanded());
+                }
+        );
 
-        holder.connectButton.setOnClickListener(new ConnectButtonEventListener(this, device));
+        Device finalDevice = device;
+        holder.connectButton.setOnClickListener(
+                v -> ScanAdapter.this.scanActivity.onConnectButtonClick(finalDevice)
+        );
 
         String manufacturer = null;
         if (device.mfgData().size() > 0) {
-            manufacturer = Nitelite.manufacturers().attribute(device.mfgData().keyAt(0));
+            manufacturer = Nitelite.manufacturers().manufacturer(device.mfgData().keyAt(0));
         }
         if ((null != manufacturer) && (manufacturer.trim().length() > 0)) {
             holder.manufacturerLabel.setText(manufacturer);
@@ -123,13 +134,13 @@ public class DeviceScanAdapter extends RecyclerView.Adapter<DeviceScanAdapter.Vi
     }
 
     @SuppressWarnings("WeakerAccess")
-    public PeripheralDevice get(String address) {
+    public Device get(String address) {
 
         return this.deviceMap.get(address);
     }
 
     @SuppressWarnings("unused")
-    public PeripheralDevice get(int index) {
+    public Device get(int index) {
 
         synchronized (this.deviceLock) {
             if ((index >= 0) && (index < this.device.size())) {
@@ -140,13 +151,13 @@ public class DeviceScanAdapter extends RecyclerView.Adapter<DeviceScanAdapter.Vi
     }
 
     @SuppressWarnings("WeakerAccess")
-    public void add(@NonNull BluetoothRadio.ScanResult scanResult) {
+    public void add(@NonNull ScanResult scanResult) {
 
         int rssi = scanResult.rssi();
 
-        PeripheralDevice periph = this.get(scanResult.address());
+        Device periph = this.get(scanResult.address());
         if (null == periph || rssi > periph.rssi()) {
-            PeripheralDevice insert;
+            Device insert;
             synchronized (this.deviceLock) {
 
                 int id = 0;
@@ -154,7 +165,7 @@ public class DeviceScanAdapter extends RecyclerView.Adapter<DeviceScanAdapter.Vi
                     ++id;
                 }
 
-                insert = new PeripheralDevice(id, scanResult);
+                insert = new Device(id, scanResult);
 
                 if (null != periph) {
                     this.device.remove(periph.id());
@@ -193,30 +204,12 @@ public class DeviceScanAdapter extends RecyclerView.Adapter<DeviceScanAdapter.Vi
 
 
     @SuppressWarnings("unused")
-    static class SortByRssi implements Comparator<PeripheralDevice> {
+    static class SortByRssi implements Comparator<Device> {
 
         @Override
-        public int compare(PeripheralDevice p1, PeripheralDevice p2) {
+        public int compare(Device p1, Device p2) {
 
             return p2.rssi() - p1.rssi();
-        }
-    }
-
-    static class ConnectButtonEventListener implements View.OnClickListener {
-
-        DeviceScanAdapter deviceScanAdapter;
-        PeripheralDevice device;
-
-        ConnectButtonEventListener(@NonNull DeviceScanAdapter deviceScanAdapter, @NonNull PeripheralDevice device) {
-
-            this.deviceScanAdapter = deviceScanAdapter;
-            this.device = device;
-        }
-
-        @Override
-        public void onClick(View v) {
-
-            this.deviceScanAdapter.scanActivity.onConnectButtonClick(this.device);
         }
     }
 
@@ -330,23 +323,5 @@ public class DeviceScanAdapter extends RecyclerView.Adapter<DeviceScanAdapter.Vi
                 this.characteristicsView.setVisibility((visible && hasCharacteristicsText) ? View.VISIBLE : View.GONE);
             }
         }
-
-        static class CardEventListener implements View.OnClickListener {
-
-            final ViewHolder viewHolder;
-
-            CardEventListener(@NonNull ViewHolder viewHolder) {
-
-                this.viewHolder = viewHolder;
-            }
-
-            @Override
-            public void onClick(View view) {
-
-                this.viewHolder.scanActivity.searchBar.clearFocus();
-                this.viewHolder.setIsExpanded(!this.viewHolder.isExpanded());
-            }
-        }
-
     }
 }

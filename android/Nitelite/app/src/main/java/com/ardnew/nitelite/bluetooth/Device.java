@@ -22,17 +22,22 @@
  -                                                                            -
  -----------------------------------------------------------------------------*/
 
-package com.ardnew.nitelite;
+package com.ardnew.nitelite.bluetooth;
 
 import android.bluetooth.BluetoothDevice;
-import android.os.Parcel;
-import android.os.Parcelable;
+import android.os.ParcelUuid;
 import android.util.SparseArray;
 
 import androidx.annotation.NonNull;
 
+import com.ardnew.nitelite.Nitelite;
+import com.ardnew.nitelite.Utility;
+
+import java.util.HashMap;
+import java.util.List;
+
 @SuppressWarnings("WeakerAccess")
-public class PeripheralDevice implements Parcelable {
+public class Device {
 
     public static final int INVALID_ID = -1;
     public static final String INVALID_NAME = "";
@@ -47,20 +52,22 @@ public class PeripheralDevice implements Parcelable {
     private final BluetoothDevice device;
     private final boolean isConnectable;
     private final SparseArray<byte[]> mfgData;
+    private final List<ParcelUuid> serviceUuid;
 
-    PeripheralDevice() {
+    public Device() {
 
-        this.id = PeripheralDevice.INVALID_ID;
-        this.name = PeripheralDevice.INVALID_NAME;
-        this.address = PeripheralDevice.INVALID_ADDRESS;
-        this.rssi = PeripheralDevice.INVALID_RSSI;
+        this.id = Device.INVALID_ID;
+        this.name = Device.INVALID_NAME;
+        this.address = Device.INVALID_ADDRESS;
+        this.rssi = Device.INVALID_RSSI;
 
         this.device = null;
         this.isConnectable = false;
         this.mfgData = null;
+        this.serviceUuid = null;
     }
 
-    PeripheralDevice(int id, BluetoothRadio.ScanResult scanResult) {
+    public Device(int id, ScanResult scanResult) {
 
         this.id = id;
         this.name = scanResult.name();
@@ -70,45 +77,21 @@ public class PeripheralDevice implements Parcelable {
         this.device = scanResult.device();
         this.isConnectable = scanResult.content().isConnectable();
         this.mfgData = scanResult.scanRecord().getManufacturerSpecificData();
+        this.serviceUuid = scanResult.scanRecord().getServiceUuids();
     }
-
-    protected PeripheralDevice(Parcel in) {
-
-        this.id = in.readInt();
-        this.name = in.readString();
-        this.address = in.readString();
-        this.rssi = in.readInt();
-
-        this.device = in.readParcelable(BluetoothDevice.class.getClassLoader());
-        this.isConnectable = in.readByte() != 0;
-        this.mfgData = in.readSparseArray(SparseArray.class.getClassLoader());
-    }
-
-    public static final Creator<PeripheralDevice> CREATOR = new Creator<PeripheralDevice>() {
-
-        @Override
-        public PeripheralDevice createFromParcel(Parcel in) {
-            return new PeripheralDevice(in);
-        }
-
-        @Override
-        public PeripheralDevice[] newArray(int size) {
-            return new PeripheralDevice[size];
-        }
-    };
 
     @NonNull
     @Override
     public String toString() {
 
         StringBuilder stringBuilder = new StringBuilder(Utility.format("(%d)", this.id));
-        if (this.address().length() > 0 && !this.address().equals(PeripheralDevice.INVALID_ADDRESS)) {
+        if (this.address().length() > 0 && !this.address().equals(Device.INVALID_ADDRESS)) {
             stringBuilder.append(Utility.format(" %s", this.address()));
         }
-        if (this.name().length() > 0 && !this.name().equals(PeripheralDevice.INVALID_NAME)) {
+        if (this.name().length() > 0 && !this.name().equals(Device.INVALID_NAME)) {
             stringBuilder.append(Utility.format(" \"%s\"", this.name()));
         }
-        if (PeripheralDevice.INVALID_RSSI != this.rssi()) {
+        if (Device.INVALID_RSSI != this.rssi()) {
             stringBuilder.append(Utility.format(" [%d dBm]", this.rssi()));
         }
         return stringBuilder.toString();
@@ -154,7 +137,12 @@ public class PeripheralDevice implements Parcelable {
         return this.mfgData;
     }
 
-    public boolean equals(PeripheralDevice device) {
+    public List<ParcelUuid> serviceUuid() {
+
+        return this.serviceUuid;
+    }
+
+    public boolean equals(Device device) {
 
         return
                 this.id() == device.id() &&
@@ -169,25 +157,35 @@ public class PeripheralDevice implements Parcelable {
     @SuppressWarnings("unused")
     public boolean isValid() {
 
-        return !this.equals(new PeripheralDevice());
+        return !this.equals(new Device());
     }
 
-    @Override
-    public int describeContents() {
+    public boolean hasNiteliteServices() {
 
-        return 0;
-    }
+        if (null == this.serviceUuid) {
+            return false;
+        }
 
-    @Override
-    public void writeToParcel(Parcel dest, int flags) {
+        HashMap<ParcelUuid, Boolean> uuidSeen = new HashMap<>();
+        for (ParcelUuid uuid : Nitelite.niteliteServices().serviceUuidMap().keySet()) {
+            uuidSeen.put(uuid, false);
+        }
 
-        dest.writeInt(this.id);
-        dest.writeString(this.name);
-        dest.writeString(this.address);
-        dest.writeInt(this.rssi);
+        if (uuidSeen.size() > this.serviceUuid.size()) {
+            return false;
+        }
 
-        dest.writeParcelable(this.device, flags);
-        dest.writeByte((byte)(this.isConnectable ? 1 : 0));
-        dest.writeSparseArray(this.mfgData);
+        for (ParcelUuid uuid : this.serviceUuid) {
+            if (uuidSeen.containsKey(uuid)) {
+                uuidSeen.put(uuid, true);
+            }
+        }
+
+        for (boolean seen : uuidSeen.values()) {
+            if (!seen) {
+                return false;
+            }
+        }
+        return true;
     }
 }

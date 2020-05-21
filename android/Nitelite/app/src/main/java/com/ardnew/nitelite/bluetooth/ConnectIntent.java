@@ -22,49 +22,36 @@
  -                                                                            -
  -----------------------------------------------------------------------------*/
 
-package com.ardnew.nitelite;
+package com.ardnew.nitelite.bluetooth;
 
-import android.app.Application;
+import android.bluetooth.BluetoothDevice;
+import android.content.Context;
+import android.content.Intent;
+import android.os.Parcelable;
 
-import com.ardnew.nitelite.bluetooth.Manufacturer;
-import com.ardnew.nitelite.bluetooth.ServiceUuid;
+import androidx.annotation.NonNull;
 
-public class Nitelite extends Application {
+public final class ConnectIntent {
 
-    private static transient Manufacturer manufacturers;
-    private static transient ServiceUuid standardServices;
-    private static transient ServiceUuid memberServices;
-    private static transient ServiceUuid niteliteServices;
+    private static final String DEVICE_TO_CONNECT = "device-to-connect";
 
-    public void onCreate() {
+    public static Intent initConnection(@NonNull Context context) {
 
-        super.onCreate();
-
-        Nitelite.manufacturers = new Manufacturer(this.getApplicationContext(), "manufacturers.properties", "manufacturer");
-        Nitelite.standardServices = new ServiceUuid(this.getApplicationContext(), "services.properties", "service.standard");
-        Nitelite.memberServices = new ServiceUuid(this.getApplicationContext(), "services.properties", "service.member");
-        Nitelite.niteliteServices = new ServiceUuid(this.getApplicationContext(), "services.properties", "service.nitelite");
+        return new Intent(context, Connection.class);
     }
 
-    public static Manufacturer manufacturers() {
+    public static Intent connectToDevice(@NonNull Context context, @NonNull BluetoothDevice device) {
 
-        return Nitelite.manufacturers;
+        return new Intent(context, Connection.class).putExtra(ConnectIntent.DEVICE_TO_CONNECT, device);
     }
 
-    @SuppressWarnings("unused")
-    public static ServiceUuid standardServices() {
+    public static BluetoothDevice getDevice(@NonNull Intent intent) {
 
-        return Nitelite.standardServices;
-    }
-
-    @SuppressWarnings("unused")
-    public static ServiceUuid memberServices() {
-
-        return Nitelite.memberServices;
-    }
-
-    public static ServiceUuid niteliteServices() {
-
-        return Nitelite.niteliteServices;
+        Parcelable parcelable = intent.getParcelableExtra(ConnectIntent.DEVICE_TO_CONNECT);
+        if (parcelable instanceof BluetoothDevice) {
+            return (BluetoothDevice)parcelable;
+        } else {
+            return null;
+        }
     }
 }
