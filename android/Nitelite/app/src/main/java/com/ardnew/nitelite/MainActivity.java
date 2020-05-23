@@ -47,11 +47,11 @@ import androidx.appcompat.widget.Toolbar;
 import com.ardnew.nitelite.bluetooth.ConnectIntent;
 import com.ardnew.nitelite.bluetooth.Connection;
 import com.ardnew.nitelite.bluetooth.GattHandler;
+import com.flask.colorpicker.ColorPickerView;
+import com.flask.colorpicker.OnColorChangedListener;
 import com.google.android.material.tabs.TabLayout;
 
-import top.defaults.colorpicker.ColorPickerView;
-
-public class MainActivity extends AppCompatActivity {
+public class MainActivity extends AppCompatActivity implements OnColorChangedListener {
 
     private ConnectionServiceDelegate connectionServiceDelegate;
 
@@ -60,8 +60,6 @@ public class MainActivity extends AppCompatActivity {
     private ColorPickerView colorPickerView;
 
     private boolean isConnectedToDevice = false;
-    private boolean isAutoUpdateEnabled = true;
-
     private int pixelCount = 0;
 
     @Override
@@ -83,7 +81,17 @@ public class MainActivity extends AppCompatActivity {
         TabLayout tabLayout = this.findViewById(R.id.main_tab_layout);
         MainAdapter mainAdapter = new MainAdapter(this, tabLayout, tabLayout.getTabCount());
         tabPager.setAdapter(mainAdapter);
-        //viewPager.addOnPageChangeListener(new TabLayout.TabLayoutOnPageChangeListener(tabLayout));
+
+        this.tabPager.post(
+                () -> {
+                    if (null == this.colorPickerView) {
+                        this.colorPickerView = this.findViewById(R.id.color_picker_view);
+                        if (null != this.colorPickerView) {
+                            this.colorPickerView.addOnColorChangedListener(MainActivity.this);
+                        }
+                    }
+                }
+        );
     }
 
     @Override
@@ -149,58 +157,6 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
-    public void onGattDeviceConnected(@NonNull BluetoothGatt gatt) {
-
-        this.isConnectedToDevice = true;
-
-        String connectionNotice =
-                Utility.format(
-                        this.getString(R.string.connected_toast_format),
-                        this.connectionServiceDelegate.connectedDevice.getAddress()
-                );
-        Toast.makeText(this, connectionNotice, Toast.LENGTH_SHORT).show();
-
-        this.colorPickerView = this.findViewById(R.id.main_color_picker);
-        if (null != this.colorPickerView) {
-            this.colorPickerView.subscribe(this.connectionServiceDelegate.connection());
-        }
-
-        this.connectionServiceDelegate.discoverServices();
-    }
-
-    public void onGattDeviceDisconnected(@NonNull BluetoothGatt gatt) {
-
-        this.isConnectedToDevice = false;
-
-        String disconnectionNotice =
-                Utility.format(
-                        this.getString(R.string.disconnected_toast_format),
-                        this.connectionServiceDelegate.lastDeviceAddress()
-                );
-        Toast.makeText(this, disconnectionNotice, Toast.LENGTH_SHORT).show();
-
-        if (null != this.colorPickerView) {
-            this.colorPickerView.unsubscribe(this.connectionServiceDelegate.connection());
-        }
-    }
-
-    public void onGattServicesDiscovered(@NonNull BluetoothGatt gatt) {
-
-        this.connectionServiceDelegate.requestPixelCount();
-    }
-
-    public void setPixelColor(int color) {
-
-        if (null != this.colorPickerView) {
-            this.colorPickerView.setInitialColor(color);
-        }
-    }
-
-    public void setPixelCount(int pixelCount) {
-
-        this.pixelCount = Math.max(pixelCount, 0);
-    }
-
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
 
@@ -226,8 +182,7 @@ public class MainActivity extends AppCompatActivity {
 
             case R.id.scan_menu_item:
                 this.startActivityForResult(
-                        new Intent(this, ScanActivity.class),
-                        ScanActivity.REQUEST_DEVICE_SCAN
+                        new Intent(this, ScanActivity.class), ScanActivity.REQUEST_DEVICE_SCAN
                 );
                 return true;
 
@@ -241,6 +196,19 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+    @Override
+    public void onColorChanged(int selectedColor) {
+
+        if (this.isConnectedToDevice) {
+            this.connectionServiceDelegate.transmitRgbLedCharPixel(0, this.pixelCount, selectedColor);
+        }
+    }
+
+    public void setPixelCount(int pixelCount) {
+
+        this.pixelCount = Math.max(pixelCount, 0);
+    }
+
     public ScrollView scrollView() {
 
         return this.scrollView;
@@ -251,6 +219,47 @@ public class MainActivity extends AppCompatActivity {
         return this.tabPager;
     }
 
+    public void onGattDeviceConnected(@NonNull BluetoothGatt gatt) {
+
+        this.isConnectedToDevice = true;
+
+        this.connectionServiceDelegate.setConnectedDevice(gatt.getDevice());
+
+        String connectionNotice =
+                Utility.format(
+                        this.getString(R.string.connected_toast_format),
+                        gatt.getDevice().getAddress()
+                );
+        Toast.makeText(this, connectionNotice, Toast.LENGTH_SHORT).show();
+
+        this.connectionServiceDelegate.discoverServices();
+    }
+
+    public void onGattDeviceDisconnected(@NonNull BluetoothGatt gatt) {
+
+        String connectionNotice =
+            Utility.format(
+                    this.getString(R.string.disconnected_toast_format),
+                    gatt.getDevice().getAddress()
+            );
+        Toast.makeText(this, connectionNotice, Toast.LENGTH_SHORT).show();
+
+        this.isConnectedToDevice = false;
+
+        if (this.connectionServiceDelegate.isReconnectingToDevice()) {
+            BluetoothDevice device = this.connectionServiceDelegate.reconnectingDevice();
+            this.connectionServiceDelegate.setConnectedDevice(null);
+            this.connectionServiceDelegate.connectToDevice(device);
+        } else {
+            this.connectionServiceDelegate.setConnectedDevice(null);
+        }
+    }
+
+    public void onGattServicesDiscovered(@NonNull BluetoothGatt gatt) {
+
+        this.connectionServiceDelegate.requestRgbLedCharStrip();
+    }
+
     static class ConnectionServiceDelegate implements ServiceConnection {
 
         private final MainActivity mainActivity;
@@ -258,8 +267,10 @@ public class MainActivity extends AppCompatActivity {
 
         private Connection connection;
         private boolean isServiceBound;
+
         private BluetoothDevice connectedDevice;
-        private String lastDeviceAddress;
+        private BluetoothDevice reconnectingDevice;
+        private BluetoothDevice lastConnectedDevice;
 
         static ConnectionServiceDelegate create(@NonNull MainActivity mainActivity) {
 
@@ -269,20 +280,17 @@ public class MainActivity extends AppCompatActivity {
         ConnectionServiceDelegate(MainActivity mainActivity) {
 
             this.mainActivity = mainActivity;
+            this.serviceIntent = ConnectIntent.initConnection(this.mainActivity.getApplicationContext());
+
             this.connection = null;
             this.isServiceBound = false;
-            this.connectedDevice = null;
-            this.lastDeviceAddress = null;
 
-            this.serviceIntent = ConnectIntent.initConnection(this.mainActivity.getApplicationContext());
+            this.connectedDevice = null;
+            this.lastConnectedDevice = null;
+            this.reconnectingDevice = null;
+
             this.mainActivity.startService(this.serviceIntent);
             this.mainActivity.bindService(this.serviceIntent, this, Context.BIND_IMPORTANT);
-        }
-
-        void onDestroy() {
-
-            this.mainActivity.unbindService(this);
-            this.mainActivity.stopService(this.serviceIntent);
         }
 
         @Override
@@ -297,31 +305,73 @@ public class MainActivity extends AppCompatActivity {
         @Override
         public void onServiceDisconnected(ComponentName name) {
 
+            this.connection = null;
             this.isServiceBound = false;
+        }
+
+        void onDestroy() {
+
+            this.mainActivity.unbindService(this);
+            this.mainActivity.stopService(this.serviceIntent);
+        }
+
+        BluetoothDevice connectedDevice() {
+
+            return this.connectedDevice;
+        }
+
+        void setConnectedDevice(BluetoothDevice device) {
+
+            this.connectedDevice = device;
+
+            this.setLastConnectedDevice(device);
+            this.setReconnectingDevice(null);
+        }
+
+        BluetoothDevice lastConnectedDevice() {
+
+            return this.lastConnectedDevice;
+        }
+
+        private void setLastConnectedDevice(BluetoothDevice device) {
+
+            this.lastConnectedDevice = device;
+        }
+
+        BluetoothDevice reconnectingDevice() {
+
+            return this.reconnectingDevice;
+        }
+
+        private void setReconnectingDevice(BluetoothDevice device) {
+
+            this.reconnectingDevice = device;
+        }
+
+        boolean isReconnectingToDevice() {
+
+            return null != this.reconnectingDevice;
         }
 
         @SuppressWarnings("UnusedReturnValue")
         boolean connectToDevice(BluetoothDevice bluetoothDevice) {
 
             if (this.isServiceBound) {
-                if ((null == this.connectedDevice) || this.disconnectFromDevice()) {
-                    if (this.connection.connectToDevice(bluetoothDevice)) {
-                        this.connectedDevice = bluetoothDevice;
-                        this.lastDeviceAddress = bluetoothDevice.getAddress();
-                        return true;
-                    }
+                if (null != this.connectedDevice) {
+                    this.setReconnectingDevice(bluetoothDevice);
+                    return this.connection.disconnectFromDevice();
+                } else {
+                    return this.connection.connectToDevice(bluetoothDevice);
                 }
             }
             return false;
         }
 
+        @SuppressWarnings("UnusedReturnValue")
         boolean disconnectFromDevice() {
 
             if (this.isServiceBound && (null != this.connectedDevice)) {
-                if (this.connection.disconnectFromDevice()) {
-                    this.connectedDevice = null;
-                    return true;
-                }
+                return this.connection.disconnectFromDevice();
             }
             return false;
         }
@@ -335,31 +385,40 @@ public class MainActivity extends AppCompatActivity {
             return false;
         }
 
-        boolean requestPixelColor() {
+        @SuppressWarnings("UnusedReturnValue")
+        boolean requestRgbLedCharPixel() {
 
             if (this.isServiceBound && (null != this.connectedDevice)) {
-                return this.connection.requestPixelColor();
+                return this.connection.requestRgbLedCharPixel();
             }
             return false;
         }
 
-        boolean requestPixelCount() {
+        @SuppressWarnings("UnusedReturnValue")
+        boolean transmitRgbLedCharPixel(int start, int length, int color) {
 
             if (this.isServiceBound && (null != this.connectedDevice)) {
-                return this.connection.requestPixelCount();
+                return this.connection.transmitRgbLedCharPixel(start, length, color);
             }
             return false;
         }
 
-        Connection connection() {
+        @SuppressWarnings("UnusedReturnValue")
+        boolean requestRgbLedCharStrip() {
 
-            return this.connection;
+            if (this.isServiceBound && (null != this.connectedDevice)) {
+                return this.connection.requestRgbLedCharStrip();
+            }
+            return false;
         }
 
-        String lastDeviceAddress() {
+        @SuppressWarnings("UnusedReturnValue")
+        boolean transmitRgbLedCharStrip(int count, int order, int type) {
 
-            return this.lastDeviceAddress;
+            if (this.isServiceBound && (null != this.connectedDevice)) {
+                return this.connection.transmitRgbLedCharStrip(count, order, type);
+            }
+            return false;
         }
     }
-
 }

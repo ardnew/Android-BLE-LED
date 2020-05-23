@@ -41,9 +41,7 @@ import androidx.annotation.NonNull;
 
 import com.ardnew.nitelite.Utility;
 
-import top.defaults.colorpicker.ColorObserver;
-
-public class Connection extends Service implements ColorObserver {
+public class Connection extends Service {
 
     public class ServiceBinder extends Binder {
 
@@ -140,25 +138,31 @@ public class Connection extends Service implements ColorObserver {
         );
     }
 
-    public boolean requestPixelColor() {
+    public boolean requestRgbLedCharPixel() {
 
         return this.handler.post(
-                () -> this.gattHandler.requestRgbLedPixel(this.bluetoothGatt)
+                () -> this.gattHandler.requestRgbLedCharPixel(this.bluetoothGatt)
         );
     }
 
-    public boolean requestPixelCount() {
+    public boolean transmitRgbLedCharPixel(int start, int length, int color) {
 
         return this.handler.post(
-                () -> this.gattHandler.requestRgbLedCount(this.bluetoothGatt)
+                () -> this.gattHandler.transmitRgbLedCharPixel(this.bluetoothGatt, start, length, color)
         );
     }
 
-    @Override
-    public void onColor(int color, boolean fromUser, boolean shouldPropagate) {
+    public boolean requestRgbLedCharStrip() {
 
-        this.handler.post(
-                () -> this.gattHandler.transmitRgbLedPixel(this.bluetoothGatt, 0, this.gattHandler.pixelCount(), color)
+        return this.handler.post(
+                () -> this.gattHandler.requestRgbLedCharStrip(this.bluetoothGatt)
+        );
+    }
+
+    public boolean transmitRgbLedCharStrip(int count, int order, int type) {
+
+        return this.handler.post(
+                () -> this.gattHandler.transmitRgbLedCharStrip(this.bluetoothGatt, count, order, type)
         );
     }
 }

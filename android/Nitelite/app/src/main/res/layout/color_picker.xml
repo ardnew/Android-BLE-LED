@@ -23,50 +23,45 @@
   ~
   -->
 
-<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.constraintlayout.widget.ConstraintLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/color_picker_layout"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:clickable="true"
     android:descendantFocusability="afterDescendants"
     android:fitsSystemWindows="true"
     android:paddingHorizontal="32dp"
-    android:paddingTop="16dp"
-    tools:context=".MainActivity">
+    android:paddingTop="16dp">
 
-    <top.defaults.colorpicker.ColorPickerView
-        android:id="@+id/main_color_picker"
+    <com.flask.colorpicker.ColorPickerView
+        android:id="@+id/color_picker_view"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:animateLayoutChanges="true"
         android:clickable="true"
         android:fitsSystemWindows="true"
         android:focusable="auto"
         android:focusableInTouchMode="true"
-        android:focusedByDefault="true"
-        android:gravity="center"
-        android:nestedScrollingEnabled="true"
-        app:enableAlpha="false"
-        app:enableBrightness="true"
+        android:isScrollContainer="false"
+        android:scrollIndicators="none"
+        android:scrollbars="none"
+        app:alphaSlider="false"
+        app:density="12"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        app:onlyUpdateOnTouchEventUp="false" />
+        app:lightnessSlider="true"
+        app:lightnessSliderView="@id/color_picker_lightness_slider"
+        app:wheelType="FLOWER" />
 
-    <Button
-        android:id="@+id/main_color_button"
+    <com.flask.colorpicker.slider.LightnessSlider
+        android:id="@+id/color_picker_lightness_slider"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginHorizontal="16dp"
-        android:layout_marginTop="8dp"
-        android:backgroundTint="@color/color_primary"
-        android:text="Color"
-        android:textColor="#E6E6E6"
-        app:cornerRadius="8dp"
+        android:layout_height="48dp"
+        android:layout_marginTop="16dp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/main_color_picker"
-        tools:ignore="HardcodedText" />
+        app:layout_constraintTop_toBottomOf="@id/color_picker_view" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

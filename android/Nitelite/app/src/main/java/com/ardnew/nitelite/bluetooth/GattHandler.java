@@ -40,19 +40,14 @@ import java.util.UUID;
 public class GattHandler extends BluetoothGattCallback {
 
     private static final UUID rgbLedServiceUuid = ParcelUuid.fromString("3f1d00c0-632f-4e53-9a14-437dd54bcccb").getUuid();
-    private static final UUID rgbLedPixelCharUuid = ParcelUuid.fromString("3f1d00c1-632f-4e53-9a14-437dd54bcccb").getUuid();
-    private static final UUID rgbLedCountCharUuid = ParcelUuid.fromString("3f1d00c2-632f-4e53-9a14-437dd54bcccb").getUuid();
 
     private static final int INVALID_PIXEL_COUNT = 0;
 
     private final MainActivity mainActivity;
 
     private BluetoothGattService rgbLedService;
-    private BluetoothGattCharacteristic rgbLedPixelChar;
-    private BluetoothGattCharacteristic rgbLedCountChar;
-
-    private RgbLedPixel rgbLedPixel;
-    private RgbLedCount rgbLedCount;
+    private RgbLedCharPixel rgbLedCharPixel;
+    private RgbLedCharStrip rgbLedCharStrip;
 
     public GattHandler(@NonNull MainActivity mainActivity) {
 
@@ -61,11 +56,8 @@ public class GattHandler extends BluetoothGattCallback {
         this.mainActivity = mainActivity;
 
         this.rgbLedService = null;
-        this.rgbLedPixelChar = null;
-        this.rgbLedCountChar = null;
-
-        this.rgbLedPixel = null;
-        this.rgbLedCount = null;
+        this.rgbLedCharPixel = null;
+        this.rgbLedCharStrip = null;
     }
 
     @Override
@@ -92,9 +84,9 @@ public class GattHandler extends BluetoothGattCallback {
         if (status == BluetoothGatt.GATT_SUCCESS) {
             this.rgbLedService = gatt.getService(GattHandler.rgbLedServiceUuid);
             if (null != this.rgbLedService) {
-                this.rgbLedPixelChar = this.rgbLedService.getCharacteristic(GattHandler.rgbLedPixelCharUuid);
-                this.rgbLedCountChar = this.rgbLedService.getCharacteristic(GattHandler.rgbLedCountCharUuid);
-                if ((null != this.rgbLedPixelChar) && (null != this.rgbLedCountChar)) {
+                this.rgbLedCharPixel = new RgbLedCharPixel(this.rgbLedService);
+                this.rgbLedCharStrip = new RgbLedCharStrip(this.rgbLedService);
+                if (this.rgbLedCharPixel.isValid() && this.rgbLedCharStrip.isValid()) {
                     runOnMain = () -> this.mainActivity.onGattServicesDiscovered(gatt);
                 }
             }
@@ -110,11 +102,11 @@ public class GattHandler extends BluetoothGattCallback {
 
         super.onCharacteristicRead(gatt, characteristic, status);
 
-        if (characteristic.getUuid().equals(this.rgbLedPixelChar.getUuid())) {
-            this.rgbLedPixel = new RgbLedPixel(characteristic.getValue());
-        } else if (characteristic.getUuid().equals(this.rgbLedCountChar.getUuid())) {
-            this.rgbLedCount = new RgbLedCount(characteristic.getValue());
-            this.mainActivity.setPixelCount(this.rgbLedCount.count());
+        if (characteristic.getUuid().equals(this.rgbLedCharPixel.uuid())) {
+            this.rgbLedCharPixel.onRead(characteristic.getValue(), status);
+        } else if (characteristic.getUuid().equals(this.rgbLedCharStrip.uuid())) {
+            this.rgbLedCharStrip.onRead(characteristic.getValue(), status);
+            this.mainActivity.setPixelCount(this.rgbLedCharStrip.count());
         }
     }
 
@@ -123,136 +115,57 @@ public class GattHandler extends BluetoothGattCallback {
 
         super.onCharacteristicWrite(gatt, characteristic, status);
 
-        if (characteristic.getUuid().equals(this.rgbLedPixelChar.getUuid())) {
-            this.rgbLedPixel = new RgbLedPixel(characteristic.getValue());
-        } else if (characteristic.getUuid().equals(this.rgbLedCountChar.getUuid())) {
-            this.rgbLedCount = new RgbLedCount(characteristic.getValue());
-            this.mainActivity.setPixelCount(this.rgbLedCount.count());
+        if (characteristic.getUuid().equals(this.rgbLedCharPixel.uuid())) {
+            this.rgbLedCharPixel.onWrite(characteristic.getValue(), status);
+        } else if (characteristic.getUuid().equals(this.rgbLedCharStrip.uuid())) {
+            this.rgbLedCharStrip.onWrite(characteristic.getValue(), status);
+            this.mainActivity.setPixelCount(this.rgbLedCharStrip.count());
         }
+    }
+
+    private boolean isRgbLedServiceReady()  {
+
+        return (null != this.rgbLedCharPixel) && this.rgbLedCharPixel.isValid() &&
+               (null != this.rgbLedCharStrip) && this.rgbLedCharStrip.isValid() ;
     }
 
     int pixelColor() {
 
-        return this.rgbLedPixel.color();
+        return null != this.rgbLedCharPixel ? this.rgbLedCharPixel.color() : 0;
     }
 
     int pixelCount() {
 
-        return this.rgbLedCount.count();
+        return null != this.rgbLedCharStrip ? this.rgbLedCharStrip.count() : 0;
     }
 
-    void requestRgbLedPixel(@NonNull BluetoothGatt gatt) {
+    void requestRgbLedCharPixel(@NonNull BluetoothGatt gatt) {
 
-        if (null != this.rgbLedPixelChar) {
-            gatt.readCharacteristic(this.rgbLedPixelChar);
-        }
-    }
-
-    void transmitRgbLedPixel(BluetoothGatt gatt, int start, int length, int color) {
-
-        this.rgbLedPixelChar.setValue(new RgbLedPixel(start, length, color).pack());
-        gatt.writeCharacteristic(this.rgbLedPixelChar);
-    }
-
-    void requestRgbLedCount(@NonNull BluetoothGatt gatt) {
-
-        if (null != this.rgbLedCountChar) {
-            gatt.readCharacteristic(this.rgbLedCountChar);
+        if (this.isRgbLedServiceReady()) {
+            this.rgbLedCharPixel.request(gatt);
         }
     }
 
-    void transmitRgbLedCount(BluetoothGatt gatt, int count) {
+    void transmitRgbLedCharPixel(BluetoothGatt gatt, int start, int length, int color) {
 
-        this.rgbLedCountChar.setValue(new RgbLedCount(count).pack());
-        gatt.writeCharacteristic(this.rgbLedCountChar);
-    }
-
-    private static class RgbLedPixel {
-
-        int start, length, color;
-
-        RgbLedPixel(int start, int length, int color) {
-
-            this.start = start;
-            this.length = length;
-            this.color = color;
-        }
-
-        RgbLedPixel(byte[] data) {
-
-            if ((null == data) || (data.length < 8)) {
-                this.start = 0;
-                this.length = 0;
-                this.color = 0;
-            } else {
-                this.start = ((int)data[0] << 8) | (int)data[1];
-                this.length = ((int)data[2] << 8) | (int)data[3];
-                this.color = ((int)data[4] << 24) | ((int)data[5] << 16) | ((int)data[6] << 8) | (int)data[7];
-            }
-        }
-
-        byte[] pack() {
-
-            byte startInt16Hi = (byte)((this.start >> 8) & 0xFF);
-            byte startInt16Lo = (byte)(this.start & 0xFF);
-
-            byte lengthInt16Hi = (byte)((this.length >> 8) & 0xFF);
-            byte lengthInt16Lo = (byte)(this.length & 0xFF);
-
-            byte colorInt32Alpha = (byte)0xFF; // alpha channel not supported (typecast because byte is signed in java...)
-            byte colorInt32Red = (byte)((this.color >> 16) & 0xFF);
-            byte colorInt32Green = (byte)((this.color >> 8) & 0xFF);
-            byte colorInt32Blue = (byte)(this.color & 0xFF);
-
-            return new byte[]{
-                startInt16Hi, startInt16Lo, lengthInt16Hi, lengthInt16Lo,
-                colorInt32Alpha, colorInt32Red, colorInt32Green, colorInt32Blue,
-            };
-        }
-
-        int start() {
-
-            return this.start;
-        }
-
-        int length() {
-
-            return this.length;
-        }
-
-        int color() {
-
-            return this.color;
+        if (this.isRgbLedServiceReady()) {
+            this.rgbLedCharPixel.update(start, length, color);
+            this.rgbLedCharPixel.transmit(gatt);
         }
     }
 
-    private static class RgbLedCount {
+    void requestRgbLedCharStrip(@NonNull BluetoothGatt gatt) {
 
-        int count;
-
-        RgbLedCount(int count) {
-
-            this.count = count;
+        if (this.isRgbLedServiceReady()) {
+            this.rgbLedCharStrip.request(gatt);
         }
+    }
 
-        RgbLedCount(byte[] data) {
+    void transmitRgbLedCharStrip(BluetoothGatt gatt, int count, int order, int type) {
 
-            this.count = ((int)data[1] << 8) | (int)data[0];
-        }
-
-        byte[] pack() {
-
-            byte countInt16Hi = (byte)((this.count >> 8) & 0xFF);
-            byte countInt16Lo = (byte)(this.count & 0xFF);
-
-            return new byte[]{
-                countInt16Lo, countInt16Hi,
-            };
-        }
-
-        int count() {
-
-            return this.count;
+        if (this.isRgbLedServiceReady()) {
+            this.rgbLedCharStrip.update(count, order, type);
+            this.rgbLedCharStrip.transmit(gatt);
         }
     }
 }

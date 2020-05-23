@@ -35,24 +35,21 @@ import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 import androidx.fragment.app.FragmentPagerAdapter;
 
+import com.flask.colorpicker.ColorPickerView;
 import com.google.android.material.tabs.TabLayout;
-
-import top.defaults.colorpicker.ColorPickerView;
 
 public class MainAdapter extends FragmentPagerAdapter {
 
     public static class ColorPicker extends Fragment {
 
         private static final String layoutId = "com.ardnew.nitelite.MainAdapter.ColorPicker.layoutId";
-        private static final String initialColor = "com.ardnew.nitelite.MainAdapter.ColorPicker.initialColor";
 
         private ColorPickerView colorPickerView;
         private Button colorButton;
 
-        static ColorPicker newInstance(int layoutId, int initialColor) {
+        static ColorPicker newInstance() {
             Bundle args = new Bundle();
-            args.putInt(ColorPicker.layoutId, layoutId);
-            args.putInt(ColorPicker.initialColor, initialColor);
+            args.putInt(ColorPicker.layoutId, R.layout.color_picker);
             ColorPicker cp = new ColorPicker();
             cp.setArguments(args);
             return cp;
@@ -74,20 +71,7 @@ public class MainAdapter extends FragmentPagerAdapter {
             Bundle args = this.getArguments();
 
             if (null != args) {
-                View root = inflater.inflate(args.getInt(ColorPicker.layoutId), container, false);
-
-                this.colorButton = root.findViewById(R.id.main_color_button);
-                this.colorPickerView = root.findViewById(R.id.main_color_picker);
-                this.colorPickerView.subscribe(
-                        (color, fromUser, shouldPropagate) -> {
-                            ColorPicker.this.colorButton.setBackgroundColor(color);
-                            ColorPicker.this.colorButton.setTextColor(color ^ 0x00FFFFFF);
-                            ColorPicker.this.colorButton.setText(Utility.format("#%06X", color & 0x00FFFFFF));
-                        }
-                );
-                this.colorPickerView.setInitialColor(args.getInt(ColorPicker.initialColor));
-
-                return root;
+                return inflater.inflate(args.getInt(ColorPicker.layoutId), container, false);
             }
             return null;
         }
@@ -95,11 +79,11 @@ public class MainAdapter extends FragmentPagerAdapter {
 
     public static class ColorPattern extends Fragment {
 
-        private static final String layoutId = "com.ardnew.nitelite.MainAdapter.ColorPicker.layoutId";
+        private static final String layoutId = "com.ardnew.nitelite.MainAdapter.ColorPattern.layoutId";
 
-        static ColorPattern newInstance(int layoutId) {
+        static ColorPattern newInstance() {
             Bundle args = new Bundle();
-            args.putInt(ColorPicker.layoutId, layoutId);
+            args.putInt(ColorPattern.layoutId, R.layout.color_pattern);
             ColorPattern cp = new ColorPattern();
             cp.setArguments(args);
             return cp;
@@ -142,11 +126,8 @@ public class MainAdapter extends FragmentPagerAdapter {
         this.tabLayout = tabLayout;
         this.numTabs = numTabs;
 
-        this.colorPicker = ColorPicker.newInstance(
-                R.layout.color_picker,
-                this.mainActivity.getColor(R.color.color_picker_initial)
-        );
-        this.colorPattern = ColorPattern.newInstance(R.layout.color_pattern);
+        this.colorPicker = ColorPicker.newInstance();
+        this.colorPattern = ColorPattern.newInstance();
     }
 
     @NonNull
