@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--=========================================================================-->
+<!--                                                                         -->
+<!-- Blixel                                                                  -->
+<!-- Copyright (c) 2020 ardnew [https://github.com/ardnew]                   -->
+<!--                                                                         -->
+<!--       Permission is hereby granted, free of charge, to any person       -->
+<!--       obtaining a copy of this software and associated                  -->
+<!--       documentation files (the "Software"), to deal in the              -->
+<!--       Software without restriction, including without limitation        -->
+<!--       the rights to use, copy, modify, merge, publish, distribute,      -->
+<!--       sublicense, and/or sell copies of the Software, and to            -->
+<!--       permit persons to whom the Software is furnished to do so,        -->
+<!--       subject to the following conditions:                              -->
+<!--                                                                         -->
+<!--       The above copyright notice and this permission notice shall       -->
+<!--       be included in all copies or substantial portions of the          -->
+<!--       Software.                                                         -->
+<!--                                                                         -->
+<!--       THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY         -->
+<!--       KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE        -->
+<!--       WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR           -->
+<!--       PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS        -->
+<!--       OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR          -->
+<!--       OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR        -->
+<!--       OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE         -->
+<!--       SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.            -->
+<!--                                                                         -->
+<!--=========================================================================-->
+
+<androidx.constraintlayout.widget.ConstraintLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:id="@+id/nav_header_layout"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_gravity="top|start"
+    android:paddingStart="@dimen/nav_header_padding_start"
+    android:paddingEnd="@dimen/nav_header_padding_end"
+    android:paddingTop="@dimen/nav_header_padding_top"
+    android:paddingBottom="@dimen/nav_header_padding_bottom"
+    android:background="@drawable/background_nav_header"
+    android:theme="@style/ThemeOverlay.AppCompat.Dark">
+
+    <ImageView
+        android:id="@+id/nav_header_icon"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:contentDescription="@string/nav_header_app_icon_content_description"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:srcCompat="@mipmap/ic_blixel" />
+
+    <TextView
+        android:id="@+id/nav_header_title_label"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/nav_header_title"
+        android:textAppearance="@style/TextAppearance.AppCompat.Body2"
+        android:layout_marginTop="20dp"
+        android:layout_marginStart="8dp"
+        app:layout_constraintStart_toEndOf="@id/nav_header_icon"
+        app:layout_constraintBottom_toTopOf="@id/nav_header_subtitle_label"
+        app:layout_constraintTop_toTopOf="@id/nav_header_icon" />
+
+    <TextView
+        android:id="@+id/nav_header_subtitle_label"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/nav_header_subtitle"
+        android:textSize="12sp"
+        android:layout_marginBottom="20dp"
+        app:layout_constraintStart_toStartOf="@id/nav_header_title_label"
+        app:layout_constraintEnd_toEndOf="@id/nav_header_title_label"
+        app:layout_constraintTop_toBottomOf="@id/nav_header_title_label"
+        app:layout_constraintBottom_toBottomOf="@id/nav_header_icon"/>
+
+</androidx.constraintlayout.widget.ConstraintLayout>

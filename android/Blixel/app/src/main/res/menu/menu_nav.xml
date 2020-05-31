@@ -1,0 +1,102 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--=========================================================================-->
+<!--                                                                         -->
+<!-- Blixel                                                                  -->
+<!-- Copyright (c) 2020 ardnew [https://github.com/ardnew]                   -->
+<!--                                                                         -->
+<!--       Permission is hereby granted, free of charge, to any person       -->
+<!--       obtaining a copy of this software and associated                  -->
+<!--       documentation files (the "Software"), to deal in the              -->
+<!--       Software without restriction, including without limitation        -->
+<!--       the rights to use, copy, modify, merge, publish, distribute,      -->
+<!--       sublicense, and/or sell copies of the Software, and to            -->
+<!--       permit persons to whom the Software is furnished to do so,        -->
+<!--       subject to the following conditions:                              -->
+<!--                                                                         -->
+<!--       The above copyright notice and this permission notice shall       -->
+<!--       be included in all copies or substantial portions of the          -->
+<!--       Software.                                                         -->
+<!--                                                                         -->
+<!--       THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY         -->
+<!--       KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE        -->
+<!--       WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR           -->
+<!--       PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS        -->
+<!--       OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR          -->
+<!--       OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR        -->
+<!--       OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE         -->
+<!--       SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.            -->
+<!--                                                                         -->
+<!--=========================================================================-->
+
+<menu
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    tools:showIn="navigation_view">
+
+    <group android:checkableBehavior="single">
+
+        <item
+            android:id="@+id/nav_home"
+            android:icon="@drawable/ic_home"
+            android:title="@string/menu_home"
+            android:enabled="true"
+            android:visible="true"
+            android:checkable="true" />
+        <item
+            android:id="@+id/nav_color"
+            android:icon="@drawable/ic_color"
+            android:title="@string/menu_color"
+            android:enabled="true"
+            android:visible="true"
+            android:checkable="true" />
+        <item
+            android:id="@+id/nav_effects"
+            android:icon="@drawable/ic_effects"
+            android:title="@string/menu_effects"
+            android:enabled="true"
+            android:visible="true"
+            android:checkable="true" />
+
+        <item
+            android:id="@+id/nav_group_controller"
+            android:title="@string/menu_controller_group"
+            android:enabled="false"
+            android:visible="true"
+            android:checkable="false">
+            <menu>
+                <item
+                    android:id="@+id/nav_motion"
+                    android:icon="@drawable/ic_motion"
+                    android:title="@string/menu_motion"
+                    android:enabled="true"
+                    android:visible="true"
+                    android:checkable="true" />
+            </menu>
+        </item>
+
+        <item
+            android:id="@+id/nav_group_device"
+            android:title="@string/menu_device_group"
+            android:enabled="false"
+            android:visible="true"
+            android:checkable="false" >
+            <menu>
+                <item
+                    android:id="@+id/nav_devices"
+                    android:icon="@drawable/ic_devices"
+                    android:title="@string/menu_devices"
+                    android:enabled="true"
+                    android:visible="true"
+                    android:checkable="true" />
+                <item
+                    android:id="@+id/nav_config"
+                    android:icon="@drawable/ic_config"
+                    android:title="@string/menu_config"
+                    android:enabled="true"
+                    android:visible="true"
+                    android:checkable="true" />
+            </menu>
+        </item>
+
+    </group>
+</menu>

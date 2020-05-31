@@ -1,0 +1,36 @@
+<component name="CopyrightManager">
+  <settings>
+    <module2copyright>
+      <element module="Project Files" copyright="github.com/ardnew" />
+    </module2copyright>
+    <LanguageOptions name="JAVA">
+      <option name="block" value="false" />
+      <option name="separateBefore" value="true" />
+      <option name="separateAfter" value="true" />
+      <option name="lenBefore" value="0" />
+      <option name="lenAfter" value="0" />
+    </LanguageOptions>
+    <LanguageOptions name="Properties">
+      <option name="block" value="false" />
+      <option name="separateBefore" value="true" />
+      <option name="separateAfter" value="true" />
+      <option name="lenBefore" value="0" />
+      <option name="lenAfter" value="0" />
+    </LanguageOptions>
+    <LanguageOptions name="XML">
+      <option name="fileLocation" value="2" />
+      <option name="block" value="false" />
+      <option name="separateBefore" value="true" />
+      <option name="separateAfter" value="true" />
+      <option name="box" value="true" />
+      <option name="filler" value="-" />
+    </LanguageOptions>
+    <LanguageOptions name="__TEMPLATE__">
+      <option name="block" value="false" />
+      <option name="separateBefore" value="true" />
+      <option name="separateAfter" value="true" />
+      <option name="box" value="true" />
+      <option name="filler" value="=" />
+    </LanguageOptions>
+  </settings>
+</component>

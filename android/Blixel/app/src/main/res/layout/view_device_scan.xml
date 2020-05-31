@@ -1,0 +1,170 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--=========================================================================-->
+<!--                                                                         -->
+<!-- Blixel                                                                  -->
+<!-- Copyright (c) 2020 ardnew [https://github.com/ardnew]                   -->
+<!--                                                                         -->
+<!--       Permission is hereby granted, free of charge, to any person       -->
+<!--       obtaining a copy of this software and associated                  -->
+<!--       documentation files (the "Software"), to deal in the              -->
+<!--       Software without restriction, including without limitation        -->
+<!--       the rights to use, copy, modify, merge, publish, distribute,      -->
+<!--       sublicense, and/or sell copies of the Software, and to            -->
+<!--       permit persons to whom the Software is furnished to do so,        -->
+<!--       subject to the following conditions:                              -->
+<!--                                                                         -->
+<!--       The above copyright notice and this permission notice shall       -->
+<!--       be included in all copies or substantial portions of the          -->
+<!--       Software.                                                         -->
+<!--                                                                         -->
+<!--       THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY         -->
+<!--       KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE        -->
+<!--       WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR           -->
+<!--       PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS        -->
+<!--       OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR          -->
+<!--       OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR        -->
+<!--       OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE         -->
+<!--       SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.            -->
+<!--                                                                         -->
+<!--=========================================================================-->
+
+<com.google.android.material.card.MaterialCardView
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/device_card"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:clickable="true"
+    android:focusableInTouchMode="false"
+    android:focusedByDefault="false"
+    app:cardCornerRadius="4dp"
+    app:cardElevation="2dp"
+    app:cardUseCompatPadding="true">
+
+    <LinearLayout
+        android:id="@+id/device_card_layout"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical"
+        android:textAlignment="center">
+
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:id="@+id/device_card_title_layout"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:background="@color/color_primary_dark"
+            android:paddingHorizontal="@dimen/device_card_text_margin"
+            android:paddingVertical="8dp">
+
+            <TextView
+                android:id="@+id/device_card_address_label"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Device address"
+                android:textAlignment="textStart"
+                android:textAppearance="@style/TextAppearance.AppCompat.Medium"
+                android:textColor="@color/color_primary_text_light"
+                android:textIsSelectable="false"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent"
+                tools:ignore="HardcodedText" />
+
+            <TextView
+                android:id="@+id/device_card_rssi_label"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginEnd="@dimen/device_card_text_margin"
+                android:text="RSSI"
+                android:textAppearance="@style/TextAppearance.AppCompat.Small"
+                android:textColor="@color/color_accent"
+                android:textIsSelectable="false"
+                android:textSize="12sp"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintEnd_toStartOf="@id/device_card_bluetooth_image"
+                app:layout_constraintTop_toTopOf="parent"
+                tools:ignore="HardcodedText" />
+
+            <ImageView
+                android:id="@+id/device_card_bluetooth_image"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:adjustViewBounds="true"
+                android:contentDescription="@string/device_card_expand_content_description"
+                android:fitsSystemWindows="true"
+                android:rotation="0"
+                android:scaleType="centerInside"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintTop_toTopOf="parent"
+                app:srcCompat="@android:drawable/stat_sys_data_bluetooth" />
+
+        </androidx.constraintlayout.widget.ConstraintLayout>
+
+        <androidx.constraintlayout.widget.ConstraintLayout
+            android:id="@+id/device_card_body_layout"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:animateLayoutChanges="true"
+            android:background="@color/color_primary"
+            android:paddingHorizontal="@dimen/device_card_text_margin"
+            android:paddingVertical="8dp">
+
+            <TextView
+                android:id="@+id/device_card_name_label"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:paddingBottom="8dp"
+                android:text="Device name"
+                android:textAlignment="textStart"
+                android:textAppearance="@style/TextAppearance.AppCompat.Small"
+                android:textColor="@color/color_primary_text"
+                android:textIsSelectable="false"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent"
+                tools:ignore="HardcodedText" />
+
+            <TextView
+                android:id="@+id/device_card_manufacturer_label"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:paddingBottom="8dp"
+                android:text="Manufacturer"
+                android:textAlignment="textStart"
+                android:textAppearance="@style/TextAppearance.AppCompat.Small"
+                android:textColor="@color/color_primary_text_dark"
+                android:textIsSelectable="false"
+                app:layout_constraintStart_toStartOf="@id/device_card_name_label"
+                app:layout_constraintTop_toBottomOf="@id/device_card_name_label"
+                tools:ignore="HardcodedText" />
+
+            <TextView
+                android:id="@+id/device_card_characteristics_view"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:paddingBottom="8dp"
+                android:text="Characteristic 1\nCharacteristic 2\nCharacteristic 3"
+                android:textAlignment="textStart"
+                android:textAppearance="@style/TextAppearance.AppCompat.Small"
+                android:textColor="@color/color_accent"
+                android:textIsSelectable="false"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintStart_toStartOf="@id/device_card_name_label"
+                app:layout_constraintTop_toBottomOf="@id/device_card_manufacturer_label"
+                tools:ignore="HardcodedText" />
+
+            <Button
+                android:id="@+id/device_card_connect_button"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:backgroundTint="@color/color_accent_interactive"
+                android:text="@string/device_card_connect_button_text"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintEnd_toEndOf="parent" />
+
+        </androidx.constraintlayout.widget.ConstraintLayout>
+
+    </LinearLayout>
+
+</com.google.android.material.card.MaterialCardView>
