@@ -85,6 +85,9 @@ public class Connection extends Service {
         }
     }
 
+    private static final int CONNECT_WAIT_TIMEOUT_MS    =  8000;
+    private static final int DISCONNECT_WAIT_TIMEOUT_MS = 10000;
+
     private Handler handler;
     private ServiceBinder serviceBinder;
 
@@ -173,17 +176,17 @@ public class Connection extends Service {
         );
     }
 
-    public boolean requestRgbLedCharPixel() {
+    public boolean requestRgbLedCharColor() {
 
         return this.handler.post(
-                () -> this.callback.requestRgbLedCharPixel(this.bluetoothGatt)
+                () -> this.callback.requestRgbLedCharColor(this.bluetoothGatt)
         );
     }
 
-    public boolean transmitRgbLedCharPixel(int start, int length, int color) {
+    public boolean transmitRgbLedCharColor(int start, int length, int color) {
 
         return this.handler.post(
-                () -> this.callback.transmitRgbLedCharPixel(this.bluetoothGatt, start, length, color)
+                () -> this.callback.transmitRgbLedCharColor(this.bluetoothGatt, start, length, color)
         );
     }
 

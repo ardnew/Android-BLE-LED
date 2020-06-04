@@ -253,7 +253,7 @@ public class ScanAdapter extends RecyclerView.Adapter<ScanAdapter.ViewHolder> {
             this.bluetoothImage = itemView.findViewById(R.id.device_card_bluetooth_image);
             this.nameLabel = itemView.findViewById(R.id.device_card_name_label);
             this.manufacturerLabel = itemView.findViewById(R.id.device_card_manufacturer_label);
-            this.characteristicsView = itemView.findViewById(R.id.device_card_characteristics_view);
+            this.characteristicsView = itemView.findViewById(R.id.device_card_services_view);
             this.connectButton = itemView.findViewById(R.id.device_card_connect_button);
 
             this.setCharacteristics(null);
@@ -312,15 +312,6 @@ public class ScanAdapter extends RecyclerView.Adapter<ScanAdapter.ViewHolder> {
             if (connectableChanged || override) {
                 this.connectButton.setEnabled(isConnectable);
             }
-
-            if (this.connectButton.isEnabled()) {
-                this.connectButton.setBackgroundColor(this.scanActivity.getColor(R.color.color_accent_interactive));
-                this.connectButton.setTextColor(this.scanActivity.getColor(R.color.color_primary_dark));
-            } else {
-                this.connectButton.setBackgroundColor(this.scanActivity.getColor(R.color.color_primary_dark));
-                this.connectButton.setTextColor(this.scanActivity.getColor(R.color.color_primary));
-            }
-
         }
 
         @SuppressWarnings("SameParameterValue")

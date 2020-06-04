@@ -28,28 +28,82 @@
 <!--                                                                         -->
 <!--=========================================================================-->
 
-<layer-list
-    xmlns:android="http://schemas.android.com/apk/res/android">
+<resources>
 
-    <item android:left="-2pt" android:right="-2pt" android:top="-2pt">
-        <shape
-            android:shape="rectangle"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content">
-                <solid android:color="@color/color_tertiary_surface"/>
-            <stroke android:width="1dp" android:color="@color/color_primary_highlight" />
-        </shape>
-    </item>
+    <string-array name="device_config_strip_color_entries">
+        <item>RGB</item>
+        <item>RBG</item>
+        <item>GRB</item>
+        <item>GBR</item>
+        <item>BRG</item>
+        <item>BGR</item>
+        <item>WRGB</item>
+        <item>WRBG</item>
+        <item>WGRB</item>
+        <item>WGBR</item>
+        <item>WBRG</item>
+        <item>WBGR</item>
+        <item>RWGB</item>
+        <item>RWBG</item>
+        <item>RGWB</item>
+        <item>RGBW</item>
+        <item>RBWG</item>
+        <item>RBGW</item>
+        <item>GWRB</item>
+        <item>GWBR</item>
+        <item>GRWB</item>
+        <item>GRBW</item>
+        <item>GBWR</item>
+        <item>GBRW</item>
+        <item>BWRG</item>
+        <item>BWGR</item>
+        <item>BRWG</item>
+        <item>BRGW</item>
+        <item>BGWR</item>
+        <item>BGRW</item>
+    </string-array>
 
-<!--    <item android:left="-100dp" android:top="-100dp">-->
-<!--        <shape-->
-<!--            android:layout_width="wrap_content"-->
-<!--            android:layout_height="wrap_content"-->
-<!--            android:shape="oval">-->
-<!--            <size android:width="40dp" android:height="40dp"/>-->
-<!--            <solid android:color="@color/color_tertiary_surface"/>-->
-<!--            <stroke android:width="1dp" android:color="@color/color_primary_highlight" />-->
-<!--        </shape>-->
-<!--    </item>-->
+    <string-array name="device_config_strip_color_values">
+        <item>6</item>
+        <item>9</item>
+        <item>82</item>
+        <item>161</item>
+        <item>88</item>
+        <item>164</item>
+        <item>27</item>
+        <item>30</item>
+        <item>39</item>
+        <item>54</item>
+        <item>45</item>
+        <item>57</item>
+        <item>75</item>
+        <item>78</item>
+        <item>135</item>
+        <item>198</item>
+        <item>141</item>
+        <item>201</item>
+        <item>99</item>
+        <item>114</item>
+        <item>147</item>
+        <item>210</item>
+        <item>177</item>
+        <item>225</item>
+        <item>108</item>
+        <item>120</item>
+        <item>156</item>
+        <item>216</item>
+        <item>180</item>
+        <item>228</item>
+    </string-array>
 
-</layer-list>
+    <string-array name="device_config_strip_type_entries">
+        <item>Neopixel (800 kHz)</item>
+        <item>Neopixel (400 kHz)</item>
+    </string-array>
+
+    <string-array name="device_config_strip_type_values">
+        <item>0</item>
+        <item>256</item>
+    </string-array>
+
+</resources>

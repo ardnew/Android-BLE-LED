@@ -42,14 +42,14 @@
         android:id="@+id/scan_app_bar"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        app:elevation="@dimen/app_bar_elevation"
+        android:theme="@style/AppTheme.Toolbar"
         app:liftOnScroll="true">
 
         <androidx.appcompat.widget.Toolbar
             android:id="@+id/scan_toolbar"
             android:layout_width="match_parent"
             android:layout_height="?attr/actionBarSize"
-            android:background="@color/color_primary_dark"
+            android:background="@color/color_secondary_surface"
             app:title="@string/title_activity_scan">
 
         </androidx.appcompat.widget.Toolbar>
@@ -61,6 +61,7 @@
             android:clickable="true"
             android:elevation="4dp"
             android:focusableInTouchMode="true"
+            android:theme="@style/AppTheme.Toolbar.SearchView"
             app:defaultQueryHint="Filter by name or address"
             app:iconifiedByDefault="false" />
 
@@ -86,7 +87,7 @@
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_margin="@dimen/fab_margin"
-        android:backgroundTint="@color/color_accent_interactive"
+        android:backgroundTint="@color/color_primary_accent"
         android:scaleType="centerInside"
         android:scaleX=".8"
         android:scaleY=".8"

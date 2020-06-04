@@ -199,6 +199,7 @@ public class Radio {
 
             new AlertDialog.Builder(this.scanActivity)
                     .setMessage(message)
+                    .setCancelable(false)
                     .setPositiveButton(android.R.string.ok, null)
                     .setOnDismissListener(permissionDialogDismissal)
                     .create().show();

@@ -37,9 +37,9 @@
             android:layout_height="match_parent">
                 <gradient
                     android:gradientRadius="250%"
-                    android:centerColor="@color/color_primary"
+                    android:centerColor="@color/color_tertiary_surface"
                     android:endColor="?attr/colorPrimarySurface"
-                    android:startColor="@color/color_primary"
+                    android:startColor="@color/color_tertiary_surface"
                     android:type="radial" />
         </shape>
     </item>

@@ -33,7 +33,6 @@ import android.os.Bundle;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -41,6 +40,8 @@ import androidx.fragment.app.Fragment;
 import androidx.lifecycle.ViewModelProvider;
 
 import com.ardnew.blixel.R;
+import com.ardnew.blixel.activity.main.MainActivity;
+import com.flask.colorpicker.ColorPickerView;
 
 public class ColorFragment extends Fragment {
 
@@ -62,8 +63,16 @@ public class ColorFragment extends Fragment {
 
             this.viewModel = new ViewModelProvider(this).get(ColorViewModel.class);
 
-            final TextView textView = root.findViewById(R.id.color_status_label);
-            this.viewModel.status().observe(getViewLifecycleOwner(), textView::setText);
+            if (this.getActivity() instanceof MainActivity) {
+                final MainActivity mainActivity = (MainActivity)this.getActivity();
+                this.viewModel.color().observe(getViewLifecycleOwner(), mainActivity::onColorChanged);
+            }
+
+            final ColorPickerView colorPickerView = root.findViewById(R.id.color_picker_view);
+            colorPickerView.addOnColorChangedListener(
+                (int selectedColor) -> this.viewModel.setColor(selectedColor)
+            );
+
         }
 
         return root;

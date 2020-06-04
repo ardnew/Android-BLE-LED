@@ -72,4 +72,20 @@
     <string name="device_card_expand_content_description">Expand</string>
     <string name="device_card_connect_button_text">Connect</string>
 
+    <string name="device_config_device_header">Device</string>
+    <string name="device_config_device_title">Address</string>
+    <string name="device_config_device_name_title">Name</string>
+    <string name="device_config_device_auto_connect_title">Auto-connect</string>
+    <string name="device_config_device_auto_connect_on_summary">Connect to this device on startup</string>
+    <string name="device_config_device_auto_connect_off_summary">Do not connect to devices on startup</string>
+    <string name="device_config_device_auto_send_title">Auto-send color and effects</string>
+    <string name="device_config_device_auto_send_on_summary">Update strip appearance immediately when changed</string>
+    <string name="device_config_device_auto_send_off_summary">Update strip appearance only when commanded</string>
+    <string name="device_config_strip_header">LED Strip</string>
+    <string name="device_config_strip_type_title">Type</string>
+    <string name="device_config_strip_type_summary">Type of LED strip and chipset</string>
+    <string name="device_config_strip_color_title">Color order</string>
+    <string name="device_config_strip_color_summary">Ordering of color components expected by LED chipset</string>
+    <string name="device_config_strip_length_title">Number of pixels</string>
+
 </resources>

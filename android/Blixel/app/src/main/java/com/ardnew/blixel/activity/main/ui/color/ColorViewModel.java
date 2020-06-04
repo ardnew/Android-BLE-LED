@@ -35,16 +35,21 @@ import androidx.lifecycle.ViewModel;
 
 public class ColorViewModel extends ViewModel {
 
-    private MutableLiveData<String> status;
+    private MutableLiveData<Integer> color;
 
     public ColorViewModel() {
 
-        this.status = new MutableLiveData<>();
-        this.status.setValue("This is color fragment");
+        this.color = new MutableLiveData<>();
+        this.color.setValue(0);
     }
 
-    public LiveData<String> status() {
+    public LiveData<Integer> color() {
 
-        return this.status;
+        return this.color;
+    }
+
+    public void setColor(int color) {
+
+        this.color.setValue(color);
     }
 }

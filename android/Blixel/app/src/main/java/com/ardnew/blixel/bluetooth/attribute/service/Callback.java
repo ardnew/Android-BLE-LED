@@ -39,10 +39,12 @@ import android.os.ParcelUuid;
 import androidx.annotation.NonNull;
 
 import com.ardnew.blixel.activity.main.MainActivity;
+import com.ardnew.blixel.bluetooth.attribute.characteristic.Neopixel;
 import com.ardnew.blixel.bluetooth.attribute.characteristic.NeopixelAnima;
 import com.ardnew.blixel.bluetooth.attribute.characteristic.NeopixelColor;
 import com.ardnew.blixel.bluetooth.attribute.characteristic.NeopixelStrip;
 
+import java.util.Observable;
 import java.util.UUID;
 
 public class Callback extends BluetoothGattCallback {
@@ -90,11 +92,34 @@ public class Callback extends BluetoothGattCallback {
         Runnable runOnMain = null;
 
         if (status == BluetoothGatt.GATT_SUCCESS) {
+
             this.neopixelService = gatt.getService(Callback.rgbLedServiceUuid);
             if (null != this.neopixelService) {
-                this.neopixelColor = new NeopixelColor(this.neopixelService);
-                this.neopixelStrip = new NeopixelStrip(this.neopixelService);
-                this.neopixelAnima = new NeopixelAnima(this.neopixelService);
+
+                this.neopixelStrip = new NeopixelStrip(this.neopixelService,
+                    (Observable o, Object arg) -> {
+                        if ((o instanceof NeopixelStrip) && (arg instanceof Neopixel.Observation)) {
+                            this.mainActivity.onRgbLedCharStripUpdate(gatt, (NeopixelStrip)o, (Neopixel.Observation)arg);
+                        }
+                    }
+                );
+
+                this.neopixelColor = new NeopixelColor(this.neopixelService,
+                    (Observable o, Object arg) -> {
+                        if ((o instanceof NeopixelColor) && (arg instanceof Neopixel.Observation)) {
+                            this.mainActivity.onRgbLedCharColorUpdate(gatt, (NeopixelColor)o, (Neopixel.Observation)arg);
+                        }
+                    }
+                );
+
+                this.neopixelAnima = new NeopixelAnima(this.neopixelService,
+                    (Observable o, Object arg) -> {
+                        if ((o instanceof NeopixelAnima) && (arg instanceof Neopixel.Observation)) {
+                            this.mainActivity.onRgbLedCharAnimaUpdate(gatt, (NeopixelAnima)o, (Neopixel.Observation)arg);
+                        }
+                    }
+                );
+
                 if (this.neopixelStrip.isValid()) {
                     runOnMain = () -> this.mainActivity.onGattServicesDiscovered(gatt);
                 }
@@ -111,12 +136,17 @@ public class Callback extends BluetoothGattCallback {
 
         super.onCharacteristicRead(gatt, characteristic, status);
 
-        if (characteristic.getUuid().equals(this.neopixelColor.uuid())) {
-            this.neopixelColor.onRead(characteristic.getValue(), status);
-        } else if (characteristic.getUuid().equals(this.neopixelStrip.uuid())) {
-            this.neopixelStrip.onRead(characteristic.getValue(), status);
-        } else if (characteristic.getUuid().equals(this.neopixelAnima.uuid())) {
-            this.neopixelAnima.onRead(characteristic.getValue(), status);
+        if (null != characteristic) {
+            UUID uuid = characteristic.getUuid();
+            if (null != uuid) {
+                if (uuid.equals(this.neopixelStrip.uuid())) {
+                    this.neopixelStrip.onRead(characteristic.getValue(), status);
+                } else if (uuid.equals(this.neopixelColor.uuid())) {
+                    this.neopixelColor.onRead(characteristic.getValue(), status);
+                } else if (uuid.equals(this.neopixelAnima.uuid())) {
+                    this.neopixelAnima.onRead(characteristic.getValue(), status);
+                }
+            }
         }
     }
 
@@ -125,12 +155,17 @@ public class Callback extends BluetoothGattCallback {
 
         super.onCharacteristicWrite(gatt, characteristic, status);
 
-        if (characteristic.getUuid().equals(this.neopixelColor.uuid())) {
-            this.neopixelColor.onWrite(characteristic.getValue(), status);
-        } else if (characteristic.getUuid().equals(this.neopixelStrip.uuid())) {
-            this.neopixelStrip.onWrite(characteristic.getValue(), status);
-        } else if (characteristic.getUuid().equals(this.neopixelAnima.uuid())) {
-            this.neopixelAnima.onWrite(characteristic.getValue(), status);
+        if (null != characteristic) {
+            UUID uuid = characteristic.getUuid();
+            if (null != uuid) {
+                if (uuid.equals(this.neopixelStrip.uuid())) {
+                    this.neopixelStrip.onWrite(characteristic.getValue(), status);
+                } else if (uuid.equals(this.neopixelColor.uuid())) {
+                    this.neopixelColor.onWrite(characteristic.getValue(), status);
+                } else if (uuid.equals(this.neopixelAnima.uuid())) {
+                    this.neopixelAnima.onWrite(characteristic.getValue(), status);
+                }
+            }
         }
     }
 
@@ -139,14 +174,14 @@ public class Callback extends BluetoothGattCallback {
         return (null != this.neopixelStrip) && this.neopixelStrip.isValid() ;
     }
 
-    public void requestRgbLedCharPixel(@NonNull BluetoothGatt gatt) {
+    public void requestRgbLedCharColor(@NonNull BluetoothGatt gatt) {
 
         if (this.isRgbLedServiceReady()) {
             this.neopixelColor.request(gatt);
         }
     }
 
-    public void transmitRgbLedCharPixel(BluetoothGatt gatt, int start, int length, int color) {
+    public void transmitRgbLedCharColor(BluetoothGatt gatt, int start, int length, int color) {
 
         if (this.isRgbLedServiceReady()) {
             this.neopixelColor.setData(start, length, color);

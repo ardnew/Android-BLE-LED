@@ -32,6 +32,9 @@ package com.ardnew.blixel.bluetooth.attribute.characteristic;
 import android.bluetooth.BluetoothGattService;
 import android.os.ParcelUuid;
 
+import androidx.annotation.NonNull;
+
+import java.util.Observer;
 import java.util.UUID;
 
 @SuppressWarnings("unused")
@@ -41,9 +44,14 @@ public class NeopixelColor extends Neopixel {
     private int length;
     private int color;
 
-    public NeopixelColor(BluetoothGattService service) {
+    public NeopixelColor(@NonNull BluetoothGattService service) {
 
-        super(service);
+        this(service, (Observer)null);
+    }
+
+    public NeopixelColor(@NonNull BluetoothGattService service, Observer...observer) {
+
+        super(service, observer);
 
         this.start  = 0;
         this.length = 0;

@@ -185,8 +185,9 @@ public class ScanActivity extends AppCompatActivity {
         );
 
         this.scanningSnackBar = Snackbar.make(this.refreshButton, R.string.scan_begin_text, (int) Radio.SCAN_DURATION_MS);
-        this.scanningSnackBar.setBackgroundTint(this.getColor(R.color.color_accent_interactive));
-        this.scanningSnackBar.setTextColor(this.getColor(R.color.color_primary_dark));
+        this.scanningSnackBar.setBackgroundTint(this.getColor(R.color.color_toast_surface));
+        this.scanningSnackBar.setTextColor(this.getColor(R.color.color_toast_text));
+        this.scanningSnackBar.setActionTextColor(this.getColor(R.color.color_toast_button_text));
         this.scanningSnackBar.setAction("Stop",
                 v -> ScanActivity.this.radio.setIsScanning(false)
         );

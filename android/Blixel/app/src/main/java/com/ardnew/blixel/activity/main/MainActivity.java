@@ -35,6 +35,7 @@ import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
+import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.view.Menu;
@@ -49,26 +50,38 @@ import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 import androidx.drawerlayout.widget.DrawerLayout;
+import androidx.fragment.app.Fragment;
 import androidx.navigation.NavController;
-import androidx.navigation.Navigation;
+import androidx.navigation.fragment.NavHostFragment;
 import androidx.navigation.ui.AppBarConfiguration;
 import androidx.navigation.ui.NavigationUI;
+import androidx.preference.PreferenceManager;
 
 import com.ardnew.blixel.R;
 import com.ardnew.blixel.Utility;
+import com.ardnew.blixel.activity.main.ui.config.ConfigFragment;
 import com.ardnew.blixel.activity.scan.ScanActivity;
 import com.ardnew.blixel.bluetooth.Connection;
+import com.ardnew.blixel.bluetooth.attribute.characteristic.Neopixel;
+import com.ardnew.blixel.bluetooth.attribute.characteristic.NeopixelAnima;
+import com.ardnew.blixel.bluetooth.attribute.characteristic.NeopixelColor;
+import com.ardnew.blixel.bluetooth.attribute.characteristic.NeopixelStrip;
 import com.ardnew.blixel.bluetooth.attribute.service.Callback;
 import com.flask.colorpicker.OnColorChangedListener;
 import com.google.android.material.navigation.NavigationView;
 
 public class MainActivity extends AppCompatActivity implements OnColorChangedListener {
 
+    private SharedPreferences sharedPreferences;
+
+    private NavController navController;
     private AppBarConfiguration appBarConfiguration;
 
     private ConnectionServiceDelegate connectionServiceDelegate;
 
     private boolean isConnectedToDevice = false;
+
+    private NeopixelStrip neopixelStrip;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -84,14 +97,21 @@ public class MainActivity extends AppCompatActivity implements OnColorChangedLis
         NavigationView navigationView = this.findViewById(R.id.main_nav_view);
 
         this.appBarConfiguration = new AppBarConfiguration.Builder(
-                R.id.nav_home, R.id.nav_devices, R.id.nav_config, R.id.nav_color, R.id.nav_effects)
+                R.id.nav_home, R.id.nav_color, R.id.nav_effects, R.id.nav_motion, R.id.nav_devices, R.id.nav_config)
                 .setDrawerLayout(drawer)
                 .build();
-        NavController navController = Navigation.findNavController(this, R.id.nav_host_fragment);
-        NavigationUI.setupActionBarWithNavController(this, navController, this.appBarConfiguration);
-        NavigationUI.setupWithNavController(navigationView, navController);
+
+        Fragment navHostFragment = this.getSupportFragmentManager().findFragmentById(R.id.nav_host_fragment);
+        if (navHostFragment instanceof NavHostFragment) {
+            this.navController = ((NavHostFragment)navHostFragment).getNavController();
+            NavigationUI.setupActionBarWithNavController(this, this.navController, this.appBarConfiguration);
+            NavigationUI.setupWithNavController(navigationView, this.navController);
+        }
 
         this.connectionServiceDelegate = ConnectionServiceDelegate.create(this);
+
+        PreferenceManager.setDefaultValues(this, R.xml.device_config, false);
+        this.sharedPreferences = PreferenceManager.getDefaultSharedPreferences(this);
     }
 
     @Override
@@ -199,16 +219,18 @@ public class MainActivity extends AppCompatActivity implements OnColorChangedLis
     @Override
     public boolean onSupportNavigateUp() {
 
-        NavController navController = Navigation.findNavController(this, R.id.nav_host_fragment);
-        return NavigationUI.navigateUp(navController, this.appBarConfiguration) || super.onSupportNavigateUp();
+        if (null != this.navController) {
+            return NavigationUI.navigateUp(this.navController, this.appBarConfiguration) || super.onSupportNavigateUp();
+        }
+        return super.onSupportNavigateUp();
     }
 
     @Override
     public void onColorChanged(int selectedColor) {
 
-//        if (this.isConnectedToDevice) {
-//            this.connectionServiceDelegate.transmitRgbLedCharPixel(0, this.pixelCount, selectedColor);
-//        }
+        if (this.isConnectedToDevice && (null != this.neopixelStrip)) {
+            this.connectionServiceDelegate.transmitRgbLedCharColor(0, this.neopixelStrip.count(), selectedColor);
+        }
     }
 
     public void onGattDeviceConnected(@NonNull BluetoothGatt gatt) {
@@ -225,6 +247,8 @@ public class MainActivity extends AppCompatActivity implements OnColorChangedLis
         Toast.makeText(this, connectionNotice, Toast.LENGTH_SHORT).show();
 
         this.connectionServiceDelegate.discoverServices();
+
+        this.updatePreference(ConfigFragment.PREF_DEVICE_KEY, gatt.getDevice().getAddress());
     }
 
     public void onGattDeviceDisconnected(@NonNull BluetoothGatt gatt) {
@@ -245,12 +269,61 @@ public class MainActivity extends AppCompatActivity implements OnColorChangedLis
         } else {
             this.connectionServiceDelegate.setConnectedDevice(null);
         }
+
+        this.updatePreference(ConfigFragment.PREF_DEVICE_KEY, null);
     }
 
     @SuppressWarnings("unused")
     public void onGattServicesDiscovered(@NonNull BluetoothGatt gatt) {
 
         this.connectionServiceDelegate.requestRgbLedCharStrip();
+    }
+
+    public void onRgbLedCharStripUpdate(@NonNull BluetoothGatt gatt, NeopixelStrip strip, Neopixel.Observation observation) {
+
+        if (observation.isReadSuccess()) {
+            this.setNeopixelStrip(strip);
+        }
+    }
+
+    public void onRgbLedCharColorUpdate(@NonNull BluetoothGatt gatt, NeopixelColor color, Neopixel.Observation observation) {
+
+
+    }
+
+    public void onRgbLedCharAnimaUpdate(@NonNull BluetoothGatt gatt, NeopixelAnima anima, Neopixel.Observation observation) {
+
+
+    }
+
+    private void setNeopixelStrip(@NonNull NeopixelStrip neopixelStrip) {
+
+        this.neopixelStrip = neopixelStrip;
+
+        this.updatePreference(ConfigFragment.PREF_STRIP_TYPE_KEY, neopixelStrip.type().value());
+        this.updatePreference(ConfigFragment.PREF_COLOR_ORDER_KEY, neopixelStrip.order().value());
+        this.updatePreference(ConfigFragment.PREF_STRIP_LENGTH_KEY, neopixelStrip.count());
+    }
+
+    public void updatePreference(@NonNull String key, Object value) {
+
+        SharedPreferences.Editor editor = this.sharedPreferences.edit();
+        switch (key) {
+            case ConfigFragment.PREF_DEVICE_KEY:
+                editor.putString(key, (String)value);
+                break;
+            case ConfigFragment.PREF_STRIP_TYPE_KEY:
+            case ConfigFragment.PREF_COLOR_ORDER_KEY:
+            case ConfigFragment.PREF_STRIP_LENGTH_KEY:
+                editor.putString(key, Utility.format("%d", value));
+                break;
+        }
+        editor.apply();
+    }
+
+    public static String readAddressFromPreferences(@NonNull SharedPreferences sharedPreferences) {
+
+        return sharedPreferences.getString(ConfigFragment.PREF_DEVICE_KEY, null);
     }
 
     @SuppressWarnings("unused")
@@ -266,6 +339,9 @@ public class MainActivity extends AppCompatActivity implements OnColorChangedLis
         private BluetoothDevice reconnectingDevice;
         private BluetoothDevice lastConnectedDevice;
 
+        private boolean isTryingToConnectToDevice;
+        private boolean isTryingToDisconnectToDevice;
+
         static ConnectionServiceDelegate create(@NonNull MainActivity mainActivity) {
 
             return new ConnectionServiceDelegate(mainActivity);
@@ -280,8 +356,11 @@ public class MainActivity extends AppCompatActivity implements OnColorChangedLis
             this.isServiceBound = false;
 
             this.connectedDevice = null;
-            this.lastConnectedDevice = null;
             this.reconnectingDevice = null;
+            this.lastConnectedDevice = null;
+
+            this.isTryingToConnectToDevice = false;
+            this.isTryingToDisconnectToDevice = false;
 
             this.mainActivity.startService(this.serviceIntent);
             this.mainActivity.bindService(this.serviceIntent, this, Context.BIND_IMPORTANT);
@@ -347,6 +426,22 @@ public class MainActivity extends AppCompatActivity implements OnColorChangedLis
             return null != this.reconnectingDevice;
         }
 
+        void setIsTryingToConnectToDevice(boolean isTryingToConnectToDevice) {
+
+            this.isTryingToConnectToDevice = isTryingToConnectToDevice;
+            if (isTryingToConnectToDevice) {
+                this.isTryingToDisconnectToDevice = false;
+            }
+        }
+
+        void setIsTryingToDisconnectToDevice(boolean isTryingToDisconnectToDevice) {
+
+            this.isTryingToDisconnectToDevice = isTryingToDisconnectToDevice;
+            if (isTryingToDisconnectToDevice) {
+                this.isTryingToConnectToDevice = false;
+            }
+        }
+
         @SuppressWarnings("UnusedReturnValue")
         boolean connectToDevice(BluetoothDevice bluetoothDevice) {
 
@@ -380,19 +475,19 @@ public class MainActivity extends AppCompatActivity implements OnColorChangedLis
         }
 
         @SuppressWarnings("UnusedReturnValue")
-        boolean requestRgbLedCharPixel() {
+        boolean requestRgbLedCharColor() {
 
             if (this.isServiceBound && (null != this.connectedDevice)) {
-                return this.connection.requestRgbLedCharPixel();
+                return this.connection.requestRgbLedCharColor();
             }
             return false;
         }
 
         @SuppressWarnings("UnusedReturnValue")
-        boolean transmitRgbLedCharPixel(int start, int length, int color) {
+        boolean transmitRgbLedCharColor(int start, int length, int color) {
 
             if (this.isServiceBound && (null != this.connectedDevice)) {
-                return this.connection.transmitRgbLedCharPixel(start, length, color);
+                return this.connection.transmitRgbLedCharColor(start, length, color);
             }
             return false;
         }

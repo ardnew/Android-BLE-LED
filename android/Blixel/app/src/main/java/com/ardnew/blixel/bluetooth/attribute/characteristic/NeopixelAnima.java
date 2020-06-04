@@ -34,6 +34,7 @@ import android.os.ParcelUuid;
 
 import androidx.annotation.NonNull;
 
+import java.util.Observer;
 import java.util.UUID;
 
 public class NeopixelAnima extends Neopixel {
@@ -86,9 +87,14 @@ public class NeopixelAnima extends Neopixel {
 
     private Mode mode;
 
-    public NeopixelAnima(BluetoothGattService service) {
+    public NeopixelAnima(@NonNull BluetoothGattService service) {
 
-        super(service);
+        this(service, (Observer)null);
+    }
+
+    public NeopixelAnima(@NonNull BluetoothGattService service, Observer...observer) {
+
+        super(service, observer);
 
         this.mode = Mode.DEFAULT;
     }

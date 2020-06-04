@@ -1,0 +1,103 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--=========================================================================-->
+<!--                                                                         -->
+<!-- Blixel                                                                  -->
+<!-- Copyright (c) 2020 ardnew [https://github.com/ardnew]                   -->
+<!--                                                                         -->
+<!--       Permission is hereby granted, free of charge, to any person       -->
+<!--       obtaining a copy of this software and associated                  -->
+<!--       documentation files (the "Software"), to deal in the              -->
+<!--       Software without restriction, including without limitation        -->
+<!--       the rights to use, copy, modify, merge, publish, distribute,      -->
+<!--       sublicense, and/or sell copies of the Software, and to            -->
+<!--       permit persons to whom the Software is furnished to do so,        -->
+<!--       subject to the following conditions:                              -->
+<!--                                                                         -->
+<!--       The above copyright notice and this permission notice shall       -->
+<!--       be included in all copies or substantial portions of the          -->
+<!--       Software.                                                         -->
+<!--                                                                         -->
+<!--       THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY         -->
+<!--       KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE        -->
+<!--       WARRANTIES OF MERCHANTABILITY, FITNESS FOR A PARTICULAR           -->
+<!--       PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS        -->
+<!--       OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR          -->
+<!--       OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR        -->
+<!--       OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE         -->
+<!--       SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.            -->
+<!--                                                                         -->
+<!--=========================================================================-->
+
+<PreferenceScreen
+    xmlns:app="http://schemas.android.com/apk/res-auto">
+
+    <PreferenceCategory
+        app:key="com.ardnew.blixel.preferences.category.device"
+        app:title="@string/device_config_device_header"
+        app:iconSpaceReserved="false" >
+
+        <EditTextPreference
+            app:key="com.ardnew.blixel.preferences.preference.device"
+            app:persistent="true"
+            app:title="@string/device_config_device_title"
+            app:useSimpleSummaryProvider="true"
+            app:iconSpaceReserved="false"
+            app:defaultValue="" />
+
+        <SwitchPreferenceCompat
+            app:key="com.ardnew.blixel.preferences.preference.device_auto_connect"
+            app:persistent="true"
+            app:title="@string/device_config_device_auto_connect_title"
+            app:summaryOn="@string/device_config_device_auto_connect_on_summary"
+            app:summaryOff="@string/device_config_device_auto_connect_off_summary"
+            app:iconSpaceReserved="false"
+            app:defaultValue="true" />
+
+    </PreferenceCategory>
+
+    <PreferenceCategory
+        app:key="com.ardnew.blixel.preferences.category.strip"
+        app:title="@string/device_config_strip_header"
+        app:iconSpaceReserved="false">
+
+        <ListPreference
+            app:key="com.ardnew.blixel.preferences.preference.strip_type"
+            app:persistent="true"
+            app:title="@string/device_config_strip_type_title"
+            app:useSimpleSummaryProvider="true"
+            app:iconSpaceReserved="false"
+            app:entries="@array/device_config_strip_type_entries"
+            app:entryValues="@array/device_config_strip_type_values"
+            app:defaultValue="0" />
+
+        <ListPreference
+            app:key="com.ardnew.blixel.preferences.preference.color_order"
+            app:persistent="true"
+            app:title="@string/device_config_strip_color_title"
+            app:useSimpleSummaryProvider="true"
+            app:iconSpaceReserved="false"
+            app:entries="@array/device_config_strip_color_entries"
+            app:entryValues="@array/device_config_strip_color_values"
+            app:defaultValue="82" />
+
+        <EditTextPreference
+            app:key="com.ardnew.blixel.preferences.preference.strip_length"
+            app:persistent="true"
+            app:title="@string/device_config_strip_length_title"
+            app:useSimpleSummaryProvider="true"
+            app:iconSpaceReserved="false"
+            app:defaultValue="30" />
+
+        <SwitchPreferenceCompat
+            app:key="com.ardnew.blixel.preferences.preference.device_auto_send"
+            app:persistent="true"
+            app:title="@string/device_config_device_auto_send_title"
+            app:summaryOn="@string/device_config_device_auto_send_on_summary"
+            app:summaryOff="@string/device_config_device_auto_send_off_summary"
+            app:iconSpaceReserved="false"
+            app:defaultValue="true"/>
+
+    </PreferenceCategory>
+
+
+</PreferenceScreen>

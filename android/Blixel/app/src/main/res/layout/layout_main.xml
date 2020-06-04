@@ -42,21 +42,19 @@
         android:id="@+id/main_layout"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:background="@color/color_primary_dark"
         tools:context=".activity.main.MainActivity">
 
         <com.google.android.material.appbar.AppBarLayout
             android:id="@+id/main_app_bar"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:theme="@style/AppTheme.ToolbarLayout">
+            android:theme="@style/AppTheme.Toolbar">
 
             <androidx.appcompat.widget.Toolbar
                 android:id="@+id/main_toolbar"
                 android:layout_width="match_parent"
                 android:layout_height="?attr/actionBarSize"
-                android:background="?attr/colorPrimary"
-                app:popupTheme="@style/AppTheme.Popover" />
+                app:popupTheme="@style/AppTheme.Toolbar.MenuPopover" />
 
         </com.google.android.material.appbar.AppBarLayout>
 
@@ -89,6 +87,7 @@
         app:headerLayout="@layout/layout_nav_header"
         app:itemIconTint="@color/color_nav_icon"
         app:itemTextColor="@color/color_nav_text"
-        app:menu="@menu/menu_nav"/>
+        app:itemShapeAppearanceOverlay="@style/AppTheme.NavigationView.ItemShape"
+        app:menu="@menu/menu_nav" />
 
 </androidx.drawerlayout.widget.DrawerLayout>

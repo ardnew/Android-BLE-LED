@@ -31,25 +31,64 @@
 <resources>
 
     <style name="AppTheme" parent="Theme.MaterialComponents.NoActionBar">
-        <item name="colorPrimary">@color/color_primary</item>
-        <item name="colorPrimaryDark">@color/color_primary_dark</item>
-        <item name="colorAccent">@color/color_accent</item>
+        <item name="android:colorPrimary">@color/color_tertiary_surface</item>
+        <item name="android:colorPrimaryDark">@color/color_secondary_surface</item>
+        <item name="android:colorAccent">@color/color_primary_highlight</item>
+        <item name="android:textColor">@color/color_primary_text</item>
+        <item name="android:alertDialogTheme">@style/AppTheme.AlertDialog</item>
     </style>
 
-    <style name="AppTheme.Popover" parent="ThemeOverlay.MaterialComponents.Dark">
+    <style name="AppTheme.Toolbar" parent="ThemeOverlay.MaterialComponents.Dark.ActionBar">
+        <item name="android:colorPrimary">@color/color_tertiary_surface</item>
+        <item name="android:colorPrimaryDark">@color/color_secondary_surface</item>
+        <item name="android:colorAccent">@color/color_primary_highlight</item>
+        <item name="android:background">@color/color_secondary_surface</item>
+        <item name="android:windowActionBar">false</item>
+        <item name="android:windowNoTitle">true</item>
+        <item name="android:elevation">@dimen/app_bar_elevation</item>
+    </style>
+
+    <style name="AppTheme.Toolbar.SearchView" parent="ThemeOverlay.MaterialComponents.Dark.ActionBar">
+        <item name="android:background">@color/color_primary_surface</item>
+        <item name="android:elevation">@dimen/app_bar_elevation</item>
+    </style>
+
+    <style name="AppTheme.Toolbar.MenuPopover" parent="ThemeOverlay.MaterialComponents.Dark">
         <item name="android:background">@color/color_transparent</item>
         <item name="android:textColor">@color/color_primary_text</item>
     </style>
 
-    <style name="AppTheme.ToolbarLayout" parent="ThemeOverlay.MaterialComponents.Dark.ActionBar">
-        <item name="windowActionBar">false</item>
-        <item name="windowNoTitle">true</item>
-        <item name="android:elevation">@dimen/app_bar_elevation</item>
+    <style name="AppTheme.NavigationView.ItemShape" parent="">
+        <item name="cornerFamily">rounded</item>
+        <item name="cornerSize">8dp</item>
     </style>
 
-    <style name="AppTheme.NoActionBar">
-        <item name="windowActionBar">false</item>
-        <item name="windowNoTitle">true</item>
+    <style name="AppTheme.Button" parent="Widget.MaterialComponents.Button">
+        <item name="itemTextColor">@color/button_text</item>
+        <item name="backgroundTint">@color/button_surface</item>
+    </style>
+
+    <style name="AppTheme.AlertDialog" parent="ThemeOverlay.MaterialComponents.Dialog.Alert">
+        <item name="android:background">@color/color_secondary_surface</item>
+        <item name="android:colorPrimary">@color/color_primary_surface</item>
+        <item name="buttonBarNegativeButtonStyle">@style/AppTheme.AlertDialog.NegativeButtonStyle</item>
+        <item name="buttonBarNeutralButtonStyle">@style/AppTheme.AlertDialog.NeutralButtonStyle</item>
+        <item name="buttonBarPositiveButtonStyle">@style/AppTheme.AlertDialog.PositiveButtonStyle</item>
+    </style>
+
+    <style name="AppTheme.AlertDialog.NegativeButtonStyle" parent="Widget.MaterialComponents.Button.TextButton.Dialog">
+        <item name="iconTint">@color/color_primary_surface</item>
+        <item name="android:textColor">@color/color_primary_text</item>
+    </style>
+
+    <style name="AppTheme.AlertDialog.NeutralButtonStyle" parent="Widget.MaterialComponents.Button.TextButton.Dialog">
+        <item name="iconTint">@color/color_primary_surface</item>
+        <item name="android:textColor">@color/color_primary_accent</item>
+    </style>
+
+    <style name="AppTheme.AlertDialog.PositiveButtonStyle" parent="Widget.MaterialComponents.Button.TextButton.Dialog">
+        <item name="iconTint">@color/color_primary_surface</item>
+        <item name="android:textColor">@color/color_primary_accent</item>
     </style>
 
 </resources>

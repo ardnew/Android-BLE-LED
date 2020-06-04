@@ -33,10 +33,14 @@ import android.bluetooth.BluetoothGatt;
 import android.bluetooth.BluetoothGattCharacteristic;
 import android.bluetooth.BluetoothGattService;
 
+import androidx.annotation.NonNull;
+
+import java.util.Observable;
+import java.util.Observer;
 import java.util.UUID;
 
 @SuppressWarnings("unused")
-public abstract class Neopixel {
+public abstract class Neopixel extends Observable {
 
     private final BluetoothGattService service;
     private final BluetoothGattCharacteristic characteristic;
@@ -47,10 +51,21 @@ public abstract class Neopixel {
         this.characteristic = null;
     }
 
-    public Neopixel(BluetoothGattService service) {
+    public Neopixel(@NonNull BluetoothGattService service) {
+
+        this(service, (Observer[])null);
+    }
+
+    public Neopixel(@NonNull BluetoothGattService service, Observer ...observer) {
 
         this.service = service;
         this.characteristic = this.service.getCharacteristic(this.uuid());
+
+        if (null != observer) {
+            for (Observer o : observer) {
+                this.addObserver(o);
+            }
+        }
     }
 
     private static boolean isValid(BluetoothGattService service, BluetoothGattCharacteristic characteristic) {
@@ -80,12 +95,22 @@ public abstract class Neopixel {
 
     public void onRead(byte[] data, int status) {
 
-        this.unpack(data);
+        Observation observation = new Observation(Observation.Operation.Read, status);
+        if (observation.isReadSuccess()) {
+            this.unpack(data);
+            this.setChanged();
+            this.notifyObservers(observation);
+        }
     }
 
     public void onWrite(byte[] data, int status) {
 
-        this.unpack(data);
+        Observation observation = new Observation(Observation.Operation.Write, status);
+        if (observation.isWriteSuccess()) {
+            this.unpack(data);
+            this.setChanged();
+            this.notifyObservers(observation);
+        }
     }
 
     public abstract UUID uuid();
@@ -93,4 +118,44 @@ public abstract class Neopixel {
     public abstract byte[] pack();
     public abstract void unpack(byte[] data);
 
+    public static class Observation {
+
+        public enum Operation {
+            Read, Write
+        }
+
+        private final Operation operation;
+        private final int status;
+
+        public Observation(Operation operation, int status) {
+
+            this.operation = operation;
+            this.status = status;
+        }
+
+        public Operation operation() {
+
+            return this.operation;
+        }
+
+        public boolean isReadSuccess() {
+
+            return this.isSuccess() && Operation.Read == this.operation;
+        }
+
+        public boolean isWriteSuccess() {
+
+            return this.isSuccess() && Operation.Write == this.operation;
+        }
+
+        public int status() {
+
+            return this.status;
+        }
+
+        public boolean isSuccess() {
+
+            return BluetoothGatt.GATT_SUCCESS == this.status;
+        }
+    }
 }

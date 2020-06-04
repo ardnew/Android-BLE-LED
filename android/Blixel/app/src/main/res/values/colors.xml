@@ -28,18 +28,38 @@
 <!--                                                                         -->
 <!--=========================================================================-->
 
-<resources
-    xmlns:tools="http://schemas.android.com/tools">
+<resources>
 
     <color name="color_transparent">#00FFFFFF</color>
-    <color name="color_primary">#1C0044</color>
-    <color name="color_primary_dark">#08001B</color>
+
+    <color name="color_primary_surface">#121212</color>
+    <color name="color_secondary_surface">#08001B</color>
+    <color name="color_tertiary_surface">#1C0044</color>
+
     <color name="color_primary_text">#FFFFFF</color>
-    <color name="color_primary_text_light">#CCCCCC</color>
-    <color name="color_primary_text_dark">#999999</color>
-    <color name="color_accent">#03DAC5</color>
-    <color name="color_accent_interactive">#FFCCFF55</color>
-    <color name="color_accent_dark" tools:keep="@color/color_accent_dark">#014243</color>
-    <color name="color_picker_initial">@color/color_accent_interactive</color>
+    <color name="color_secondary_text">#CCCCCC</color>
+    <color name="color_tertiary_text">#999999</color>
+
+    <color name="color_primary_highlight">#03DAC5</color>
+    <color name="color_primary_accent">#CCFF55</color>
+
+    <color name="color_button_enabled_surface">@color/color_primary_accent</color>
+    <color name="color_button_enabled_text">@color/color_primary_surface</color>
+    <color name="color_button_disabled_surface">@color/color_primary_surface</color>
+    <color name="color_button_disabled_text">@color/color_secondary_surface</color>
+
+    <color name="color_toast_surface">@color/color_primary_accent</color>
+    <color name="color_toast_text">@color/color_primary_surface</color>
+    <color name="color_toast_button_text">@color/color_secondary_surface</color>
+
+    <color name="color_device_card_header_surface">@color/color_tertiary_surface</color>
+    <color name="color_device_card_body_surface">@color/color_secondary_surface</color>
+    <color name="color_device_card_address_text">@color/color_primary_text</color>
+    <color name="color_device_card_rssi_text">@color/color_primary_highlight</color>
+    <color name="color_device_card_name_text">@color/color_secondary_text</color>
+    <color name="color_device_card_mfg_text">@color/color_tertiary_text</color>
+    <color name="color_device_card_services_text">@color/color_tertiary_text</color>
+
+    <color name="color_picker_initial">@color/color_primary_accent</color>
 
 </resources>

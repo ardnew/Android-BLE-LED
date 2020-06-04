@@ -29,22 +29,39 @@
 
 package com.ardnew.blixel.activity.main.ui.config;
 
+import android.content.SharedPreferences;
 import android.os.Bundle;
-import android.view.LayoutInflater;
-import android.view.View;
-import android.view.ViewGroup;
-import android.widget.TextView;
 
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-import androidx.fragment.app.Fragment;
-import androidx.lifecycle.ViewModelProvider;
+import androidx.preference.Preference;
+import androidx.preference.PreferenceCategory;
+import androidx.preference.PreferenceFragmentCompat;
+import androidx.preference.PreferenceManager;
 
 import com.ardnew.blixel.R;
 
-public class ConfigFragment extends Fragment {
+public class ConfigFragment extends PreferenceFragmentCompat {
 
-    private ConfigViewModel viewModel;
+    public static final String CAT_DEVICE_KEY        = "com.ardnew.blixel.preferences.category.device";
+    public static final String PREF_DEVICE_KEY       = "com.ardnew.blixel.preferences.preference.device";
+    public static final String PREF_AUTO_CONNECT_KEY = "com.ardnew.blixel.preferences.preference.device_auto_connect";
+    public static final String CAT_STRIP_KEY         = "com.ardnew.blixel.preferences.category.strip";
+    public static final String PREF_STRIP_TYPE_KEY   = "com.ardnew.blixel.preferences.preference.strip_type";
+    public static final String PREF_COLOR_ORDER_KEY  = "com.ardnew.blixel.preferences.preference.color_order";
+    public static final String PREF_STRIP_LENGTH_KEY = "com.ardnew.blixel.preferences.preference.strip_length";
+    public static final String PREF_AUTO_SEND_KEY    = "com.ardnew.blixel.preferences.preference.device_auto_send";
+
+    private SharedPreferences sharedPreferences;
+
+    private boolean isInitialized = false;
+
+    private PreferenceCategory categoryDevice;
+    private Preference         preferenceDevice;
+    private Preference         preferenceAutoConnect;
+    private PreferenceCategory categoryStrip;
+    private Preference         preferenceStripType;
+    private Preference         preferenceColorOrder;
+    private Preference         preferenceStripLength;
+    private Preference         preferenceAutoSend;
 
     @SuppressWarnings("unused")
     public static ConfigFragment newInstance() {
@@ -53,19 +70,32 @@ public class ConfigFragment extends Fragment {
     }
 
     @Override
-    public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container,
-                             @Nullable Bundle savedInstanceState) {
+    public void onResume() {
 
-        View root = inflater.inflate(R.layout.fragment_config, container, false);
+        super.onResume();
+    }
 
-        if (null == this.viewModel) {
+    @Override
+    public void onCreatePreferences(Bundle savedInstanceState, String rootKey) {
 
-            this.viewModel = new ViewModelProvider(this).get(ConfigViewModel.class);
+        this.setPreferencesFromResource(R.xml.device_config, rootKey);
 
-            final TextView textView = root.findViewById(R.id.config_status_label);
-            this.viewModel.status().observe(getViewLifecycleOwner(), textView::setText);
+        if (!this.isInitialized) {
+
+            PreferenceManager preferenceManager = this.getPreferenceManager();
+            if (null != preferenceManager) {
+                this.sharedPreferences = preferenceManager.getSharedPreferences();
+            }
+
+            this.categoryDevice        = this.findPreference(ConfigFragment.CAT_DEVICE_KEY);
+            this.preferenceDevice      = this.findPreference(ConfigFragment.PREF_DEVICE_KEY);
+            this.preferenceAutoConnect = this.findPreference(ConfigFragment.PREF_AUTO_CONNECT_KEY);
+            this.categoryStrip         = this.findPreference(ConfigFragment.CAT_STRIP_KEY);
+            this.preferenceStripType   = this.findPreference(ConfigFragment.PREF_STRIP_TYPE_KEY);
+            this.preferenceColorOrder  = this.findPreference(ConfigFragment.PREF_COLOR_ORDER_KEY);
+            this.preferenceStripLength = this.findPreference(ConfigFragment.PREF_STRIP_LENGTH_KEY);
+            this.preferenceAutoSend    = this.findPreference(ConfigFragment.PREF_AUTO_SEND_KEY);
+            this.isInitialized         = true;
         }
-
-        return root;
     }
 }

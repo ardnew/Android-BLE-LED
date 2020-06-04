@@ -36,6 +36,7 @@ import androidx.annotation.NonNull;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Observer;
 import java.util.UUID;
 
 @SuppressWarnings("unused")
@@ -176,9 +177,14 @@ public class NeopixelStrip extends Neopixel {
     private ColorOrder order;
     private PixelType type;
 
-    public NeopixelStrip(BluetoothGattService service) {
+    public NeopixelStrip(@NonNull BluetoothGattService service) {
 
-        super(service);
+        this(service, (Observer)null);
+    }
+
+    public NeopixelStrip(@NonNull BluetoothGattService service, Observer...observer) {
+
+        super(service, observer);
 
         this.count = 0;
         this.order = ColorOrder.DEFAULT;
