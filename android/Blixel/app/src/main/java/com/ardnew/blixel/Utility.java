@@ -36,6 +36,9 @@ import android.view.inputmethod.InputMethodManager;
 import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 
+import com.google.android.material.snackbar.Snackbar;
+
+import java.util.ArrayList;
 import java.util.List;
 import java.util.ListIterator;
 import java.util.Locale;
@@ -151,4 +154,45 @@ public class Utility {
             return INVALID_UINT;
         }
     }
+
+    public static Snackbar makeSnackBar(View parent, int duration, String text) {
+
+        Snackbar snackbar = Snackbar.make(parent, text, duration);
+
+        snackbar.setBackgroundTint(parent.getContext().getColor(R.color.color_snackbar_surface));
+        snackbar.setTextColor(parent.getContext().getColor(R.color.color_snackbar_text));
+
+        return snackbar;
+    }
+
+    public static Snackbar makeSnackBar(View parent, int duration, int textResId) {
+
+        return Utility.makeSnackBar(parent, duration, parent.getContext().getString(textResId));
+    }
+
+    public static Snackbar makeSnackBar(View parent, int duration, String text, String actionText, View.OnClickListener action) {
+
+        Snackbar snackbar = Utility.makeSnackBar(parent, duration, text);
+
+        snackbar.setActionTextColor(parent.getContext().getColor(R.color.color_snackbar_button_text));
+        snackbar.setAction(actionText, action);
+
+        return snackbar;
+    }
+
+    public static Snackbar makeSnackBar(View parent, int duration, int textResId, int actionTextResId, View.OnClickListener action) {
+
+        return Utility.makeSnackBar(parent, duration,
+            parent.getContext().getString(textResId), parent.getContext().getString(actionTextResId), action);
+    }
+
+    public static class RunList extends ArrayList<Runnable> implements Runnable {
+        @Override
+        public void run() {
+            for (Runnable runner : this) {
+                runner.run();
+            }
+        }
+    }
+
 }

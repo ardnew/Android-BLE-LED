@@ -27,17 +27,17 @@
 //                                                                             =
 //==============================================================================
 
-package com.ardnew.blixel.activity.main.ui.color;
+package com.ardnew.blixel.activity.main.ui.config;
 
 import androidx.lifecycle.LiveData;
 import androidx.lifecycle.MutableLiveData;
 import androidx.lifecycle.ViewModel;
 
-public class ColorViewModel extends ViewModel {
+public class ConfigViewModel extends ViewModel {
 
     private MutableLiveData<Integer> color;
 
-    public ColorViewModel() {
+    public ConfigViewModel() {
 
         this.color = new MutableLiveData<>();
         this.color.setValue(0);

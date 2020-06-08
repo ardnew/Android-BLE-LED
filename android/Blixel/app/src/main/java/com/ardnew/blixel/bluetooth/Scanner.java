@@ -34,8 +34,9 @@ import android.app.AlertDialog;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothManager;
 import android.bluetooth.le.BluetoothLeScanner;
+import android.bluetooth.le.ScanCallback;
+import android.bluetooth.le.ScanResult;
 import android.content.Context;
-import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.os.Handler;
@@ -45,9 +46,19 @@ import androidx.appcompat.app.AppCompatActivity;
 
 import com.ardnew.blixel.R;
 import com.ardnew.blixel.activity.scan.ScanActivity;
-import com.ardnew.blixel.bluetooth.scan.Callback;
+import com.ardnew.blixel.bluetooth.scan.Result;
 
-public class Radio {
+import java.util.List;
+
+public class Scanner {
+
+    public interface ScanListener {
+        AppCompatActivity scanActivity();
+        void onScanReady();
+        void onScanStart();
+        void onScanStop();
+        void onScanResult(int callbackType, @NonNull Result result);
+    }
 
     public static final long SCAN_DURATION_MS = 10000;
 
@@ -55,32 +66,46 @@ public class Radio {
     private boolean isScanning;
     private long scanDuration;
 
-    private final ScanActivity scanActivity;
-    private final Callback callback;
+    private final ScanListener scanListener;
     private final Handler scanHandler;
 
     private BluetoothManager bluetoothManager;
     private BluetoothAdapter bluetoothAdapter;
     private BluetoothLeScanner bluetoothScanner;
 
-    public Radio(ScanActivity scanActivity) throws NotSupportedException {
+    private final ScanCallback scanCallback = new ScanCallback() {
+        @Override
+        public void onScanResult(int callbackType, ScanResult result) {
+            super.onScanResult(callbackType, result);
+            Scanner.this.scanListener.scanActivity().runOnUiThread(
+                () -> Scanner.this.scanListener.onScanResult(callbackType, new Result(result))
+            );
+        }
+        @Override
+        public void onBatchScanResults(List<ScanResult> results) {
+            super.onBatchScanResults(results);
+        }
+        @Override
+        public void onScanFailed(int errorCode) {
+            super.onScanFailed(errorCode);
+        }
+    };
+
+    public Scanner(ScanListener scanListener) throws NotSupportedException {
 
         this.isReady = false;
         this.isScanning = false;
-        this.scanDuration = Radio.SCAN_DURATION_MS;
+        this.scanDuration = Scanner.SCAN_DURATION_MS;
 
-        this.scanActivity = scanActivity;
-        this.callback = new Callback(this.scanActivity);
+        this.scanListener = scanListener;
         this.scanHandler = new Handler();
 
-        if (this.scanActivity.getPackageManager().hasSystemFeature(PackageManager.FEATURE_BLUETOOTH_LE)) {
-            this.bluetoothManager = (BluetoothManager) this.scanActivity.getSystemService(Context.BLUETOOTH_SERVICE);
+        if (this.scanListener.scanActivity().getPackageManager().hasSystemFeature(PackageManager.FEATURE_BLUETOOTH_LE)) {
+            this.bluetoothManager = (BluetoothManager)this.scanListener.scanActivity().getSystemService(Context.BLUETOOTH_SERVICE);
         }
 
         if (null == this.bluetoothManager) {
-            throw new NotSupportedException(
-                    this.scanActivity
-            );
+            throw new NotSupportedException(this.scanListener.scanActivity());
         }
 
         this.bluetoothAdapter = this.bluetoothManager.getAdapter();
@@ -104,7 +129,7 @@ public class Radio {
 
         // notify the activity if radio state changed from not-ready to ready
         if (this.isReady && readyChange) {
-            this.scanActivity.onBluetoothRadioReady();
+            this.scanListener.onScanReady();
         }
     }
 
@@ -140,29 +165,29 @@ public class Radio {
     @SuppressWarnings("unused")
     void setScanDuration(long scanDuration) {
 
-        this.scanDuration = (scanDuration > 0) ? scanDuration : Radio.SCAN_DURATION_MS;
+        this.scanDuration = (scanDuration > 0) ? scanDuration : Scanner.SCAN_DURATION_MS;
     }
 
     private void scanStart() {
 
         this.isScanning = true;
 
-        this.scanActivity.runOnUiThread(this.scanActivity::onScanStart);
-        this.bluetoothScanner.startScan(this.callback);
+        this.scanListener.scanActivity().runOnUiThread(this.scanListener::onScanStart);
+        this.bluetoothScanner.startScan(this.scanCallback);
     }
 
     private void scanStop() {
 
         this.isScanning = false;
 
-        this.bluetoothScanner.stopScan(this.callback);
-        this.scanActivity.runOnUiThread(this.scanActivity::onScanStop);
+        this.bluetoothScanner.stopScan(this.scanCallback);
+        this.scanListener.scanActivity().runOnUiThread(this.scanListener::onScanStop);
     }
 
     public void enableBluetooth() {
 
         if ((null == this.bluetoothAdapter) || !this.bluetoothAdapter.isEnabled()) {
-            this.scanActivity.startActivityForResult(
+            this.scanListener.scanActivity().startActivityForResult(
                     new Intent(BluetoothAdapter.ACTION_REQUEST_ENABLE),
                     ScanActivity.REQUEST_BLUETOOTH_ENABLE
             );
@@ -185,23 +210,23 @@ public class Radio {
 
         this.permitBluetoothScan(
                 Manifest.permission.ACCESS_FINE_LOCATION,
-                this.scanActivity.getResources().getString(R.string.scan_permission_request)
+                this.scanListener.scanActivity().getResources().getString(R.string.scan_permission_request)
         );
     }
 
     @SuppressWarnings("SameParameterValue")
     private void permitBluetoothScan(String permission, String message) {
 
-        if (PackageManager.PERMISSION_GRANTED != this.scanActivity.checkSelfPermission(permission)) {
+        if (PackageManager.PERMISSION_GRANTED != this.scanListener.scanActivity().checkSelfPermission(permission)) {
 
-            PermissionDialogDismissal permissionDialogDismissal =
-                    new PermissionDialogDismissal(this.scanActivity, new String[]{permission});
-
-            new AlertDialog.Builder(this.scanActivity)
+            new AlertDialog.Builder(this.scanListener.scanActivity())
                     .setMessage(message)
                     .setCancelable(false)
                     .setPositiveButton(android.R.string.ok, null)
-                    .setOnDismissListener(permissionDialogDismissal)
+                    .setOnDismissListener(
+                        dialog -> this.scanListener.scanActivity().requestPermissions(
+                            new String[]{permission}, ScanActivity.REQUEST_BLUETOOTH_PERMISSION
+                        ))
                     .create().show();
 
         } else {
@@ -222,26 +247,6 @@ public class Radio {
     private void onPermitBluetoothScan() {
 
         this.setIsReady(true);
-    }
-
-    private static class PermissionDialogDismissal implements DialogInterface.OnDismissListener {
-
-        private final ScanActivity scanActivity;
-        private final String[] permission;
-        private final int requestCode;
-
-        PermissionDialogDismissal(@NonNull ScanActivity scanActivity, String[] permission) {
-
-            this.scanActivity = scanActivity;
-            this.permission = permission;
-            this.requestCode = ScanActivity.REQUEST_BLUETOOTH_PERMISSION;
-        }
-
-        @Override
-        public void onDismiss(DialogInterface dialog) {
-
-            this.scanActivity.requestPermissions(this.permission, this.requestCode);
-        }
     }
 
     static class NotSupportedException extends UnsupportedOperationException {

@@ -27,16 +27,16 @@
 //                                                                             =
 //==============================================================================
 
-package com.ardnew.blixel.bluetooth.attribute.characteristic;
+package com.ardnew.blixel.bluetooth.gatt.characteristic;
 
 import android.bluetooth.BluetoothGattService;
+import android.os.Parcel;
 import android.os.ParcelUuid;
 
 import androidx.annotation.NonNull;
 
 import java.util.HashMap;
 import java.util.Map;
-import java.util.Observer;
 import java.util.UUID;
 
 @SuppressWarnings("unused")
@@ -179,16 +179,67 @@ public class NeopixelStrip extends Neopixel {
 
     public NeopixelStrip(@NonNull BluetoothGattService service) {
 
-        this(service, (Observer)null);
-    }
-
-    public NeopixelStrip(@NonNull BluetoothGattService service, Observer...observer) {
-
-        super(service, observer);
+        super(service);
 
         this.count = 0;
         this.order = ColorOrder.DEFAULT;
         this.type  = PixelType.DEFAULT;
+    }
+
+    public NeopixelStrip(@NonNull BluetoothGattService service, int count, ColorOrder order, PixelType type) {
+
+        super(service);
+
+        this.count = count;
+        this.order = order;
+        this.type  = type;
+    }
+
+    public NeopixelStrip(@NonNull BluetoothGattService service, byte[] data) {
+
+        this(service);
+
+        this.unpack(data);
+    }
+
+    public NeopixelStrip(Parcel in) {
+
+        super(in);
+
+        this.count = in.readInt();
+        this.order = ColorOrder.fromValue(in.readInt());
+        this.type = PixelType.fromValue(in.readInt());
+    }
+
+    public static final Creator<NeopixelStrip> CREATOR = new Creator<NeopixelStrip>() {
+
+        @Override
+        public NeopixelStrip createFromParcel(Parcel in) {
+
+            return new NeopixelStrip(in);
+        }
+
+        @Override
+        public NeopixelStrip[] newArray(int size) {
+
+            return new NeopixelStrip[size];
+        }
+    };
+
+    @Override
+    public int describeContents() {
+
+        return 0;
+    }
+
+    @Override
+    public void writeToParcel(Parcel dest, int flags) {
+
+        super.writeToParcel(dest, flags);
+
+        dest.writeInt(this.count);
+        dest.writeInt(this.order.value());
+        dest.writeInt(this.type.value());
     }
 
     public void setData(int count, ColorOrder order, PixelType type) {

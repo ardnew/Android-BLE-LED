@@ -37,15 +37,29 @@ import android.view.ViewGroup;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
+import androidx.fragment.app.FragmentActivity;
 import androidx.lifecycle.ViewModelProvider;
 
 import com.ardnew.blixel.R;
-import com.ardnew.blixel.activity.main.MainActivity;
+import com.ardnew.blixel.activity.main.MainViewModel;
+import com.ardnew.blixel.bluetooth.gatt.characteristic.NeopixelColor;
 import com.flask.colorpicker.ColorPickerView;
+import com.flask.colorpicker.OnColorChangedListener;
+import com.flask.colorpicker.slider.AlphaSlider;
+import com.flask.colorpicker.slider.LightnessSlider;
 
-public class ColorFragment extends Fragment {
+public class ColorFragment extends Fragment implements OnColorChangedListener {
 
-    private ColorViewModel viewModel;
+    private MainViewModel viewModel;
+    private ColorPickerView colorPickerView;
+    private AlphaSlider alphaSlider;
+    private LightnessSlider lightnessSlider;
+
+    private boolean isInitialized = false;
+
+    private int selectedColor;
+    private int selectedAlpha;
+    private int selectedBright;
 
     @SuppressWarnings("unused")
     public static ColorFragment newInstance() {
@@ -59,22 +73,65 @@ public class ColorFragment extends Fragment {
 
         View root = inflater.inflate(R.layout.fragment_color, container, false);
 
-        if (null == this.viewModel) {
+        if (!this.isInitialized) {
 
-            this.viewModel = new ViewModelProvider(this).get(ColorViewModel.class);
+            final FragmentActivity activity = this.getActivity();
+            this.viewModel = new ViewModelProvider((null != activity) ? activity : this).get(MainViewModel.class);
 
-            if (this.getActivity() instanceof MainActivity) {
-                final MainActivity mainActivity = (MainActivity)this.getActivity();
-                this.viewModel.color().observe(getViewLifecycleOwner(), mainActivity::onColorChanged);
-            }
+            this.colorPickerView = root.findViewById(R.id.color_picker_view);
+            this.colorPickerView.addOnColorChangedListener(this);
 
-            final ColorPickerView colorPickerView = root.findViewById(R.id.color_picker_view);
-            colorPickerView.addOnColorChangedListener(
-                (int selectedColor) -> this.viewModel.setColor(selectedColor)
-            );
+            this.alphaSlider = root.findViewById(R.id.color_picker_alpha_slider);
+            this.alphaSlider.setColorPicker(this.colorPickerView);
+            this.alphaSlider.setOnValueChangedListener(this::onAlphaChanged);
+            this.alphaSlider.setVisibility(View.GONE);
 
+            this.lightnessSlider = root.findViewById(R.id.color_picker_lightness_slider);
+            this.lightnessSlider.setColorPicker(this.colorPickerView);
+            this.lightnessSlider.setOnValueChangedListener(this::onLightnessChanged);
+
+            this.isInitialized = true;
         }
 
         return root;
     }
+
+    @Override
+    public void onResume() {
+
+        super.onResume();
+
+        if (null != this.viewModel) {
+            final NeopixelColor neopixelColor = this.viewModel.getNeopixelColor();
+            if ((null != neopixelColor) && neopixelColor.isValid()) {
+
+                this.selectedColor  = neopixelColor.color();
+                this.selectedAlpha  = neopixelColor.alpha();
+                this.selectedBright = neopixelColor.bright();
+
+                this.colorPickerView.setColor(this.selectedColor, false);
+                this.alphaSlider.setColor(this.selectedColor);
+                this.lightnessSlider.setColor(this.selectedColor);
+            }
+        }
+    }
+
+    @Override
+    public void onColorChanged(int selectedColor) {
+
+        this.selectedColor = selectedColor;
+
+        this.viewModel.updateNeopixelColor(selectedColor, this.selectedAlpha, this.selectedBright);
+    }
+
+    public void onAlphaChanged(float value) {
+
+        this.selectedAlpha = Math.round(value * NeopixelColor.MAX_ALPHA) & 0xFF;
+    }
+
+    public void onLightnessChanged(float value) {
+
+        this.selectedBright = Math.round(value * NeopixelColor.MAX_BRIGHT) & 0xFF;
+    }
+
 }

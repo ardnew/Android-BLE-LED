@@ -27,39 +27,71 @@
 //                                                                             =
 //==============================================================================
 
-package com.ardnew.blixel.bluetooth.attribute.characteristic;
+package com.ardnew.blixel.bluetooth.gatt.characteristic;
 
 import android.bluetooth.BluetoothGattService;
+import android.os.Parcel;
 import android.os.ParcelUuid;
+import android.os.Parcelable;
 
 import androidx.annotation.NonNull;
 
-import java.util.Observer;
 import java.util.UUID;
 
 public class NeopixelAnima extends Neopixel {
 
-    public interface Animation {
-        @SuppressWarnings("SameReturnValue")
-        int size();
-        byte[] pack();
-        void unpack(byte[] data);
+    public abstract static class Animation implements Parcelable {
+        abstract int size();
+        abstract byte[] pack();
+        abstract void unpack(byte[] data);
     }
 
-    public enum Mode {
+    public enum Mode implements Parcelable {
 
         NONE("None", null),        // = 0
-        RAINBOW("Rainbow", new Rainbow());  // = 1
+        RAINBOW("Rainbow", new Rainbow()); // = 1
 
         private static final Mode DEFAULT = Mode.NONE;
 
-        private final String    name;
-        private final Animation animation;
+        private final String name;
+        private Animation animation;
 
         Mode(final String name, final Animation animation) {
 
             this.name      = name;
             this.animation = animation;
+        }
+
+        public static final Creator<Mode> CREATOR = new Creator<Mode>() {
+
+            @Override
+            public Mode createFromParcel(Parcel in) {
+
+                Mode mode = Mode.fromId(in.readInt());
+                if ((null != mode) && (null != mode.animation)) {
+                    mode.animation = in.readParcelable(mode.animation.getClass().getClassLoader());
+                }
+                return mode;
+            }
+
+            @Override
+            public Mode[] newArray(int size) {
+
+                return new Mode[size];
+            }
+        };
+
+        @Override
+        public void writeToParcel(Parcel dest, int flags) {
+
+            dest.writeInt(this.ordinal());
+            dest.writeParcelable(this.animation, flags);
+        }
+
+        @Override
+        public int describeContents() {
+
+            return 0;
         }
 
         public static Mode fromId(final int id) {
@@ -89,14 +121,65 @@ public class NeopixelAnima extends Neopixel {
 
     public NeopixelAnima(@NonNull BluetoothGattService service) {
 
-        this(service, (Observer)null);
-    }
-
-    public NeopixelAnima(@NonNull BluetoothGattService service, Observer...observer) {
-
-        super(service, observer);
+        super(service);
 
         this.mode = Mode.DEFAULT;
+    }
+
+    public NeopixelAnima(@NonNull BluetoothGattService service, Mode mode, byte[] aniData) {
+
+        super(service);
+
+        if (null != mode) {
+            Animation animation = mode.animation();
+            if (null != animation) {
+                animation.unpack(aniData);
+            }
+        }
+        this.setMode(mode);
+    }
+
+    public NeopixelAnima(@NonNull BluetoothGattService service, byte[] data) {
+
+        this(service);
+
+        this.unpack(data);
+    }
+
+    public NeopixelAnima(Parcel in) {
+
+        super(in);
+
+        this.mode = in.readParcelable(Mode.class.getClassLoader());
+    }
+
+    public static final Creator<NeopixelAnima> CREATOR = new Creator<NeopixelAnima>() {
+
+        @Override
+        public NeopixelAnima createFromParcel(Parcel in) {
+
+            return new NeopixelAnima(in);
+        }
+
+        @Override
+        public NeopixelAnima[] newArray(int size) {
+
+            return new NeopixelAnima[size];
+        }
+    };
+
+    @Override
+    public int describeContents() {
+
+        return 0;
+    }
+
+    @Override
+    public void writeToParcel(Parcel dest, int flags) {
+
+        super.writeToParcel(dest, flags);
+
+        dest.writeParcelable(this.mode, flags);
     }
 
     public void setMode(Mode mode) {
@@ -125,7 +208,6 @@ public class NeopixelAnima extends Neopixel {
         this.setMode(Mode.RAINBOW.ordinal(), new Rainbow(speed).pack());
     }
 
-    @SuppressWarnings("unused")
     public Mode mode() {
 
         return this.mode;
@@ -186,7 +268,7 @@ public class NeopixelAnima extends Neopixel {
         }
     }
 
-    public static class Rainbow implements Animation {
+    public static class Rainbow extends Animation {
 
         static final int DEFAULT_SPEED = 10;
 
@@ -200,6 +282,38 @@ public class NeopixelAnima extends Neopixel {
         Rainbow(int speed) {
 
             this.speed = speed;
+        }
+
+        Rainbow(Parcel in) {
+
+            this.speed = in.readInt();
+        }
+
+        public static final Creator<Rainbow> CREATOR = new Creator<Rainbow>() {
+
+            @Override
+            public Rainbow createFromParcel(Parcel in) {
+
+                return new Rainbow(in);
+            }
+
+            @Override
+            public Rainbow[] newArray(int size) {
+
+                return new Rainbow[size];
+            }
+        };
+
+        @Override
+        public int describeContents() {
+
+            return 0;
+        }
+
+        @Override
+        public void writeToParcel(Parcel dest, int flags) {
+
+            dest.writeInt(this.speed);
         }
 
         @Override

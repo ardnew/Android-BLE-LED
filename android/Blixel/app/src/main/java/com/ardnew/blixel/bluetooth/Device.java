@@ -30,7 +30,12 @@
 package com.ardnew.blixel.bluetooth;
 
 import android.bluetooth.BluetoothDevice;
+import android.bluetooth.BluetoothGatt;
+import android.bluetooth.BluetoothGattCallback;
+import android.content.Context;
+import android.os.Parcel;
 import android.os.ParcelUuid;
+import android.os.Parcelable;
 import android.util.SparseArray;
 
 import androidx.annotation.NonNull;
@@ -42,65 +47,141 @@ import com.ardnew.blixel.bluetooth.scan.Result;
 import java.util.HashMap;
 import java.util.List;
 
-@SuppressWarnings("WeakerAccess")
-public class Device {
+public class Device implements Parcelable {
 
     public static final int INVALID_ID = -1;
     public static final String INVALID_NAME = "";
     public static final String INVALID_ADDRESS = "";
     public static final int INVALID_RSSI = -256;
+    public static final String INVALID_MFG = "";
 
     private int id;
     private final String name;
     private final String address;
     private final int rssi;
 
-    private final BluetoothDevice device;
+    private final BluetoothDevice bluetoothDevice;
     private final boolean isConnectable;
-    private final SparseArray<byte[]> mfgData;
-    private final List<ParcelUuid> serviceUuid;
+    private final boolean hasBlixelServices;
+    private final String manufacturer;
+
+    private boolean isConnected;
 
     public Device() {
 
-        this.id = Device.INVALID_ID;
-        this.name = Device.INVALID_NAME;
-        this.address = Device.INVALID_ADDRESS;
-        this.rssi = Device.INVALID_RSSI;
+        this.id                = Device.INVALID_ID;
+        this.name              = Device.INVALID_NAME;
+        this.address           = Device.INVALID_ADDRESS;
+        this.rssi              = Device.INVALID_RSSI;
 
-        this.device = null;
-        this.isConnectable = false;
-        this.mfgData = null;
-        this.serviceUuid = null;
+        this.bluetoothDevice   = null;
+        this.isConnectable     = false;
+        this.hasBlixelServices = false;
+        this.manufacturer      = null;
+
+        this.isConnected       = false;
     }
 
     public Device(int id, Result result) {
 
-        this.id = id;
-        this.name = result.name();
-        this.address = result.address();
-        this.rssi = result.rssi();
+        this.id                = id;
+        this.name              = result.name();
+        this.address           = result.address();
+        this.rssi              = result.rssi();
 
-        this.device = result.device();
-        this.isConnectable = result.content().isConnectable();
-        this.mfgData = result.scanRecord().getManufacturerSpecificData();
-        this.serviceUuid = result.scanRecord().getServiceUuids();
+        this.bluetoothDevice   = result.device();
+        this.isConnectable     = result.content().isConnectable();
+        this.hasBlixelServices = Device.hasBlixelServices(result.scanRecord().getServiceUuids());
+        this.manufacturer      = Device.parseManufacturer(result.scanRecord().getManufacturerSpecificData());
+
+        this.isConnected       = false;
+    }
+
+    protected Device(Parcel in) {
+
+        this.id                = in.readInt();
+        this.name              = in.readString();
+        this.address           = in.readString();
+        this.rssi              = in.readInt();
+
+        this.bluetoothDevice   = in.readParcelable(BluetoothDevice.class.getClassLoader());
+        this.isConnectable     = in.readByte() != 0;
+        this.hasBlixelServices = in.readByte() != 0;
+        this.manufacturer      = in.readString();
+
+        this.isConnected       = in.readByte() != 0;
+    }
+
+    public static final Creator<Device> CREATOR = new Creator<Device>() {
+
+        @Override
+        public Device createFromParcel(Parcel in) {
+
+            return new Device(in);
+        }
+
+        @Override
+        public Device[] newArray(int size) {
+
+            return new Device[size];
+        }
+    };
+
+    @Override
+    public int describeContents() {
+
+        return 0;
+    }
+
+    @Override
+    public void writeToParcel(Parcel dest, int flags) {
+
+        dest.writeInt(this.id);
+        dest.writeString(this.name);
+        dest.writeString(this.address);
+        dest.writeInt(this.rssi);
+
+        dest.writeParcelable(this.bluetoothDevice, flags);
+        dest.writeByte((byte)(this.isConnectable ? ~0 : 0));
+        dest.writeByte((byte)(this.hasBlixelServices ? ~0 : 0));
+        dest.writeString(this.manufacturer);
+
+        dest.writeByte((byte)(this.isConnected ? ~0 : 0));
     }
 
     @NonNull
     @Override
     public String toString() {
 
-        StringBuilder stringBuilder = new StringBuilder(Utility.format("(%d)", this.id));
+        StringBuilder stringBuilder = new StringBuilder(Utility.format("%d:", this.id));
         if (this.address().length() > 0 && !this.address().equals(Device.INVALID_ADDRESS)) {
             stringBuilder.append(Utility.format(" %s", this.address()));
         }
         if (this.name().length() > 0 && !this.name().equals(Device.INVALID_NAME)) {
             stringBuilder.append(Utility.format(" \"%s\"", this.name()));
         }
+        if (this.manufacturer().length() > 0 && !this.manufacturer().equals(Device.INVALID_MFG)) {
+            stringBuilder.append(Utility.format(" [%s]", this.manufacturer));
+        }
         if (Device.INVALID_RSSI != this.rssi()) {
-            stringBuilder.append(Utility.format(" [%d dBm]", this.rssi()));
+            stringBuilder.append(Utility.format(" (%d dBm)", this.rssi()));
         }
         return stringBuilder.toString();
+    }
+
+    public String shortDescription() {
+
+        StringBuilder stringBuilder = new StringBuilder();
+        if (this.name().length() > 0 && !this.name().equals(Device.INVALID_NAME)) {
+            stringBuilder.append(Utility.format(" %s", this.name()));
+        }
+        if (this.manufacturer().length() > 0 && !this.manufacturer().equals(Device.INVALID_MFG)) {
+            stringBuilder.append(Utility.format(" (%s)", this.manufacturer()));
+        }
+        if (this.address().length() > 0 && !this.address().equals(Device.INVALID_ADDRESS)) {
+            stringBuilder.append(Utility.format(" [%s]", this.address()));
+        }
+        return stringBuilder.toString().trim();
     }
 
     public void setId(int id) {
@@ -128,9 +209,9 @@ public class Device {
         return this.rssi;
     }
 
-    public BluetoothDevice device() {
+    public BluetoothDevice bluetoothDevice() {
 
-        return this.device;
+        return this.bluetoothDevice;
     }
 
     public boolean isConnectable() {
@@ -138,51 +219,55 @@ public class Device {
         return this.isConnectable;
     }
 
-    public SparseArray<byte[]> mfgData() {
-
-        return this.mfgData;
-    }
-
-    @SuppressWarnings("unused")
-    public List<ParcelUuid> serviceUuid() {
-
-        return this.serviceUuid;
-    }
-
-    public boolean equals(Device device) {
-
-        return
-                this.id() == device.id() &&
-                        this.name().equalsIgnoreCase(device.name()) &&
-                        this.address().equalsIgnoreCase(device.address()) &&
-                        this.rssi() == device.rssi() &&
-                        this.device().equals(device.device()) &&
-                        this.isConnectable() == device.isConnectable();
-
-    }
-
-    @SuppressWarnings("unused")
-    public boolean isValid() {
-
-        return !this.equals(new Device());
-    }
-
     public boolean hasBlixelServices() {
 
-        if (null == this.serviceUuid) {
-            return false;
+        return this.hasBlixelServices;
+    }
+
+    public String manufacturer() {
+
+        return this.manufacturer;
+    }
+
+    public boolean isConnected() {
+
+        return this.isConnected;
+    }
+
+    public void setIsConnected(boolean isConnected) {
+
+        this.isConnected = isConnected;
+    }
+
+    public BluetoothGatt connect(@NonNull Context context, boolean autoConnect, @NonNull BluetoothGattCallback callback) {
+
+        BluetoothDevice bluetoothDevice = this.bluetoothDevice();
+        if (null != bluetoothDevice) {
+            return bluetoothDevice.connectGatt(context, autoConnect, callback);
         }
+        return null;
+    }
+
+    public static String parseManufacturer(SparseArray<byte[]> mfgData) {
+
+        if ((null == mfgData) || (0 == mfgData.size())) {
+            return Device.INVALID_MFG;
+        }
+        return Blixel.manufacturers().manufacturer(mfgData.keyAt(0));
+    }
+
+    public static boolean hasBlixelServices(List<ParcelUuid> serviceUuid) {
 
         HashMap<ParcelUuid, Boolean> uuidSeen = new HashMap<>();
         for (ParcelUuid uuid : Blixel.blixelServices().serviceMap().keySet()) {
             uuidSeen.put(uuid, false);
         }
 
-        if (uuidSeen.size() > this.serviceUuid.size()) {
+        if ((null == serviceUuid) || (uuidSeen.size() > serviceUuid.size())) {
             return false;
         }
 
-        for (ParcelUuid uuid : this.serviceUuid) {
+        for (ParcelUuid uuid : serviceUuid) {
             if (uuidSeen.containsKey(uuid)) {
                 uuidSeen.put(uuid, true);
             }

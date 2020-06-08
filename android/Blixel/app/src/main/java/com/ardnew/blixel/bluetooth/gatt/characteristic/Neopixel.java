@@ -27,20 +27,22 @@
 //                                                                             =
 //==============================================================================
 
-package com.ardnew.blixel.bluetooth.attribute.characteristic;
+package com.ardnew.blixel.bluetooth.gatt.characteristic;
 
 import android.bluetooth.BluetoothGatt;
 import android.bluetooth.BluetoothGattCharacteristic;
 import android.bluetooth.BluetoothGattService;
+import android.os.Parcel;
+import android.os.ParcelUuid;
+import android.os.Parcelable;
 
 import androidx.annotation.NonNull;
 
-import java.util.Observable;
-import java.util.Observer;
 import java.util.UUID;
 
-@SuppressWarnings("unused")
-public abstract class Neopixel extends Observable {
+public abstract class Neopixel implements Parcelable {
+
+    public static final UUID rgbLedServiceUuid = ParcelUuid.fromString("3f1d00c0-632f-4e53-9a14-437dd54bcccb").getUuid();
 
     private final BluetoothGattService service;
     private final BluetoothGattCharacteristic characteristic;
@@ -53,19 +55,28 @@ public abstract class Neopixel extends Observable {
 
     public Neopixel(@NonNull BluetoothGattService service) {
 
-        this(service, (Observer[])null);
-    }
-
-    public Neopixel(@NonNull BluetoothGattService service, Observer ...observer) {
-
         this.service = service;
         this.characteristic = this.service.getCharacteristic(this.uuid());
+    }
 
-        if (null != observer) {
-            for (Observer o : observer) {
-                this.addObserver(o);
-            }
-        }
+    public Neopixel(@NonNull BluetoothGattService service, byte[] data) {
+
+        this(service);
+
+        this.unpack(data);
+    }
+
+    public Neopixel(Parcel in) {
+
+        this.service = in.readParcelable(BluetoothGattService.class.getClassLoader());
+        this.characteristic = in.readParcelable(BluetoothGattCharacteristic.class.getClassLoader());
+    }
+
+    @Override
+    public void writeToParcel(Parcel dest, int flags) {
+
+        dest.writeParcelable(this.service, flags);
+        dest.writeParcelable(this.characteristic, flags);
     }
 
     private static boolean isValid(BluetoothGattService service, BluetoothGattCharacteristic characteristic) {
@@ -93,69 +104,8 @@ public abstract class Neopixel extends Observable {
         }
     }
 
-    public void onRead(byte[] data, int status) {
-
-        Observation observation = new Observation(Observation.Operation.Read, status);
-        if (observation.isReadSuccess()) {
-            this.unpack(data);
-            this.setChanged();
-            this.notifyObservers(observation);
-        }
-    }
-
-    public void onWrite(byte[] data, int status) {
-
-        Observation observation = new Observation(Observation.Operation.Write, status);
-        if (observation.isWriteSuccess()) {
-            this.unpack(data);
-            this.setChanged();
-            this.notifyObservers(observation);
-        }
-    }
-
     public abstract UUID uuid();
     public abstract int size();
     public abstract byte[] pack();
     public abstract void unpack(byte[] data);
-
-    public static class Observation {
-
-        public enum Operation {
-            Read, Write
-        }
-
-        private final Operation operation;
-        private final int status;
-
-        public Observation(Operation operation, int status) {
-
-            this.operation = operation;
-            this.status = status;
-        }
-
-        public Operation operation() {
-
-            return this.operation;
-        }
-
-        public boolean isReadSuccess() {
-
-            return this.isSuccess() && Operation.Read == this.operation;
-        }
-
-        public boolean isWriteSuccess() {
-
-            return this.isSuccess() && Operation.Write == this.operation;
-        }
-
-        public int status() {
-
-            return this.status;
-        }
-
-        public boolean isSuccess() {
-
-            return BluetoothGatt.GATT_SUCCESS == this.status;
-        }
-    }
 }

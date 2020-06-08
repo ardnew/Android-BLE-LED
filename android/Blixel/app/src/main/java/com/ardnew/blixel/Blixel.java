@@ -41,14 +41,25 @@ public class Blixel extends Application {
     private static transient Service memberServices;
     private static transient Service blixelServices;
 
+    private static Blixel blixel = null;
+
     public void onCreate() {
 
         super.onCreate();
+
+        if (null == Blixel.blixel) {
+            Blixel.blixel = this;
+        }
 
         Blixel.manufacturers = new Manufacturer(this.getApplicationContext(), "manufacturers.properties", "manufacturer");
         Blixel.standardServices = new Service(this.getApplicationContext(), "services.properties", "service.standard");
         Blixel.memberServices = new Service(this.getApplicationContext(), "services.properties", "service.member");
         Blixel.blixelServices = new Service(this.getApplicationContext(), "services.properties", "service.blixel");
+    }
+
+    public static Blixel application() {
+
+        return Blixel.blixel;
     }
 
     public static Manufacturer manufacturers() {

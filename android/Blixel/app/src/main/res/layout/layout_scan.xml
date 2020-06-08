@@ -67,20 +67,27 @@
 
     </com.google.android.material.appbar.AppBarLayout>
 
-    <androidx.recyclerview.widget.RecyclerView
-        android:id="@+id/scan_recycler_view"
+    <androidx.swiperefreshlayout.widget.SwipeRefreshLayout
+        android:id="@+id/scan_swipe_refresh_layout"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:layout_marginHorizontal="16dp"
-        android:descendantFocusability="afterDescendants"
-        android:fadingEdge="vertical"
-        android:fadingEdgeLength="16dp"
-        android:overScrollMode="ifContentScrolls"
-        android:requiresFadingEdge="vertical"
-        app:layout_behavior="@string/appbar_scrolling_view_behavior"
-        tools:context=".activity.scan.ScanActivity"
-        tools:listitem="@layout/view_device_scan"
-        tools:showIn="@layout/layout_scan" />
+        app:layout_behavior="@string/appbar_scrolling_view_behavior">
+
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/scan_recycler_view"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:layout_marginHorizontal="16dp"
+            android:fadingEdge="vertical"
+            android:fadingEdgeLength="16dp"
+            android:overScrollMode="ifContentScrolls"
+            android:requiresFadingEdge="vertical"
+            app:layout_behavior="@string/appbar_scrolling_view_behavior"
+            tools:context=".activity.scan.ScanActivity"
+            tools:listitem="@layout/view_device_scan"
+            tools:showIn="@layout/layout_scan" />
+
+    </androidx.swiperefreshlayout.widget.SwipeRefreshLayout>
 
     <com.google.android.material.floatingactionbutton.FloatingActionButton
         android:id="@+id/scan_refresh_fab"
@@ -92,7 +99,7 @@
         android:scaleX=".8"
         android:scaleY=".8"
         app:layout_anchor="@id/scan_recycler_view"
-        app:layout_anchorGravity="bottom|center_horizontal"
+        app:layout_anchorGravity="bottom|end"
         app:maxImageSize="40dp"
         app:srcCompat="@android:drawable/stat_notify_sync" />
 

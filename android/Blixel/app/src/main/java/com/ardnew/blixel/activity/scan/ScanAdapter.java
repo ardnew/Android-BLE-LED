@@ -39,30 +39,31 @@ import android.widget.TextView;
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.ardnew.blixel.Blixel;
 import com.ardnew.blixel.R;
 import com.ardnew.blixel.Utility;
 import com.ardnew.blixel.bluetooth.Device;
 import com.ardnew.blixel.bluetooth.scan.Result;
 
 import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class ScanAdapter extends RecyclerView.Adapter<ScanAdapter.ViewHolder> {
 
-    private final Object deviceLock = new Object();
-
-    private final ScanActivity scanActivity;
     private final List<Device> device;
     private final ConcurrentHashMap<String, Device> deviceMap; // keyed on device address
+    private final ConnectClickListener connectClickListener;
 
-    ScanAdapter(@NonNull ScanActivity scanActivity) {
+    public interface ConnectClickListener {
 
-        this.scanActivity = scanActivity;
+        void onConnectClick(@NonNull Device device);
+    }
+
+    ScanAdapter(ConnectClickListener connectClickListener) {
+
         this.device = new ArrayList<>();
         this.deviceMap = new ConcurrentHashMap<>();
+        this.connectClickListener = connectClickListener;
     }
 
     @NonNull
@@ -73,21 +74,21 @@ public class ScanAdapter extends RecyclerView.Adapter<ScanAdapter.ViewHolder> {
                 from(parent.getContext()).
                 inflate(R.layout.view_device_scan, parent, false);
 
-        return new ScanAdapter.ViewHolder(this.scanActivity, itemView);
+        return new ScanAdapter.ViewHolder(itemView);
     }
 
     @Override
     public void onBindViewHolder(@NonNull ScanAdapter.ViewHolder holder, int position) {
 
-        Device device;
-
+        Device d;
         try {
-            synchronized (this.deviceLock) {
-                device = this.device.get(position);
+            synchronized (this) {
+                d = this.device.get(position);
             }
         } catch (Exception ex) {
-            device = new Device();
+            d = new Device();
         }
+        final Device device = d;
 
         holder.addressLabel.setText(device.address());
 
@@ -101,27 +102,14 @@ public class ScanAdapter extends RecyclerView.Adapter<ScanAdapter.ViewHolder> {
 
         holder.rssiLabel.setText(Utility.format("%d dBm", device.rssi()));
 
-        holder.setIsExpanded(false, true);
-        holder.setIsConnectable(device.isConnectable() && device.hasBlixelServices(), true);
+        holder.setIsConnectable(device.isConnectable() && device.hasBlixelServices());
 
-        holder.itemView.setOnClickListener(
-                v -> {
-                    holder.scanActivity().searchBar().clearFocus();
-                    holder.setIsExpanded(!holder.isExpanded());
-                }
-        );
-
-        Device finalDevice = device;
         holder.connectButton.setOnClickListener(
-                v -> ScanAdapter.this.scanActivity.onConnectButtonClick(finalDevice)
+                v -> this.connectClickListener.onConnectClick(device)
         );
 
-        String manufacturer = null;
-        if (device.mfgData().size() > 0) {
-            manufacturer = Blixel.manufacturers().manufacturer(device.mfgData().keyAt(0));
-        }
-        if ((null != manufacturer) && (manufacturer.trim().length() > 0)) {
-            holder.manufacturerLabel.setText(manufacturer);
+        if ((null != device.manufacturer()) && (device.manufacturer().trim().length() > 0)) {
+            holder.manufacturerLabel.setText(device.manufacturer());
             holder.manufacturerLabel.setVisibility(View.VISIBLE);
         } else {
             holder.manufacturerLabel.setText("");
@@ -135,30 +123,16 @@ public class ScanAdapter extends RecyclerView.Adapter<ScanAdapter.ViewHolder> {
         return this.count();
     }
 
-    @SuppressWarnings("WeakerAccess")
     public int count() {
 
         return this.deviceMap.size();
     }
 
-    @SuppressWarnings("WeakerAccess")
     public Device get(String address) {
 
         return this.deviceMap.get(address);
     }
 
-    @SuppressWarnings("unused")
-    public Device get(int index) {
-
-        synchronized (this.deviceLock) {
-            if ((index >= 0) && (index < this.device.size())) {
-                return this.device.get(index);
-            }
-        }
-        return null;
-    }
-
-    @SuppressWarnings("WeakerAccess")
     public void add(@NonNull Result result) {
 
         int rssi = result.rssi();
@@ -166,7 +140,7 @@ public class ScanAdapter extends RecyclerView.Adapter<ScanAdapter.ViewHolder> {
         Device periph = this.get(result.address());
         if (null == periph || rssi > periph.rssi()) {
             Device insert;
-            synchronized (this.deviceLock) {
+            synchronized (this) {
 
                 int id = 0;
                 while (id < this.device.size() && this.device.get(id).rssi() >= rssi) {
@@ -194,58 +168,35 @@ public class ScanAdapter extends RecyclerView.Adapter<ScanAdapter.ViewHolder> {
         }
     }
 
-    @SuppressWarnings("WeakerAccess")
+    public void addAll(List<Result> result) {
+
+        for (Result r : result) {
+            this.add(r);
+        }
+    }
+
     public void clear() {
 
         this.deviceMap.clear();
-        synchronized (this.deviceLock) {
+        synchronized (this) {
             this.device.clear();
             this.notifyDataSetChanged();
         }
     }
 
-    @SuppressWarnings("unused")
-    protected void refresh() {
-
-        this.notifyDataSetChanged();
-    }
-
-
-    @SuppressWarnings("unused")
-    static class SortByRssi implements Comparator<Device> {
-
-        @Override
-        public int compare(Device p1, Device p2) {
-
-            return p2.rssi() - p1.rssi();
-        }
-    }
-
     static class ViewHolder extends RecyclerView.ViewHolder {
 
-        private static final String TEXT_VIEW_NEWLINE = "\n";
-
-        final ScanActivity scanActivity;
-
-        @SuppressWarnings("unused")
         final View parent;
         final TextView addressLabel;
         final TextView rssiLabel;
         final ImageView bluetoothImage;
         final TextView nameLabel;
         final TextView manufacturerLabel;
-        final TextView characteristicsView;
         final Button connectButton;
 
-        @SuppressWarnings("unused")
-        boolean isConnectable;
-        boolean isExpanded;
-
-        ViewHolder(@NonNull ScanActivity scanActivity, @NonNull View itemView) {
+        ViewHolder(@NonNull View itemView) {
 
             super(itemView);
-
-            this.scanActivity = scanActivity;
 
             this.parent = itemView;
             this.addressLabel = itemView.findViewById(R.id.device_card_address_label);
@@ -253,86 +204,14 @@ public class ScanAdapter extends RecyclerView.Adapter<ScanAdapter.ViewHolder> {
             this.bluetoothImage = itemView.findViewById(R.id.device_card_bluetooth_image);
             this.nameLabel = itemView.findViewById(R.id.device_card_name_label);
             this.manufacturerLabel = itemView.findViewById(R.id.device_card_manufacturer_label);
-            this.characteristicsView = itemView.findViewById(R.id.device_card_services_view);
             this.connectButton = itemView.findViewById(R.id.device_card_connect_button);
 
-            this.setCharacteristics(null);
-
-            this.setIsExpanded(false, true);
-            this.setIsConnectable(false, true);
+            this.setIsConnectable(false);
         }
 
-        public ScanActivity scanActivity() {
+        private void setIsConnectable(boolean isConnectable) {
 
-            return this.scanActivity;
-        }
-
-        boolean isExpanded() {
-
-            return this.isExpanded;
-        }
-
-        void setIsExpanded(boolean isExpanded) {
-
-            this.setIsExpanded(isExpanded, false);
-        }
-
-        private void setIsExpanded(boolean isExpanded, boolean override) {
-
-            boolean expandedChanged = this.isExpanded != isExpanded;
-
-            this.isExpanded = isExpanded;
-
-            if (expandedChanged || override) {
-                this.setCharacteristicsVisible(isExpanded);
-    //                this.expandImage.setRotation(
-    //                        isExpanded
-    //                                ? ViewHolder.EXPANDED_IMAGE_ROTATION
-    //                                : ViewHolder.COLLAPSED_IMAGE_ROTATION
-    //                );
-            }
-        }
-
-        @SuppressWarnings("unused")
-        protected boolean isConnectable() {
-
-            return this.isConnectable;
-        }
-
-        @SuppressWarnings("unused")
-        protected void setIsConnectable(boolean isConnectable) {
-
-            this.setIsConnectable(isConnectable, false);
-        }
-
-        private void setIsConnectable(boolean isConnectable, boolean override) {
-
-            boolean connectableChanged = this.isConnectable != isConnectable;
-
-            if (connectableChanged || override) {
-                this.connectButton.setEnabled(isConnectable);
-            }
-        }
-
-        @SuppressWarnings("SameParameterValue")
-        private void setCharacteristics(List<String> characteristics) {
-
-            this.characteristicsView.setText(Utility.join(characteristics, ViewHolder.TEXT_VIEW_NEWLINE));
-        }
-
-        private void setCharacteristicsVisible(boolean visible) {
-
-            int currentVisibility = this.characteristicsView.getVisibility();
-            CharSequence characteristicsText = this.characteristicsView.getText();
-            boolean hasCharacteristicsText = (null != characteristicsText) && (characteristicsText.length() > 0);
-
-            boolean visibilityChanged =
-                    (visible && (currentVisibility != View.VISIBLE)) ||
-                            (!visible && (currentVisibility == View.VISIBLE));
-
-            if (visibilityChanged) {
-                this.characteristicsView.setVisibility((visible && hasCharacteristicsText) ? View.VISIBLE : View.GONE);
-            }
+            this.connectButton.setEnabled(isConnectable);
         }
     }
 }

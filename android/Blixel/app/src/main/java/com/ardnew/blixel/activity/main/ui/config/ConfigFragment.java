@@ -31,13 +31,22 @@ package com.ardnew.blixel.activity.main.ui.config;
 
 import android.content.SharedPreferences;
 import android.os.Bundle;
+import android.view.LayoutInflater;
+import android.view.View;
+import android.view.ViewGroup;
 
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.fragment.app.FragmentActivity;
+import androidx.lifecycle.ViewModelProvider;
 import androidx.preference.Preference;
 import androidx.preference.PreferenceCategory;
 import androidx.preference.PreferenceFragmentCompat;
 import androidx.preference.PreferenceManager;
 
 import com.ardnew.blixel.R;
+import com.ardnew.blixel.Utility;
+import com.ardnew.blixel.activity.main.MainViewModel;
 
 public class ConfigFragment extends PreferenceFragmentCompat {
 
@@ -50,6 +59,7 @@ public class ConfigFragment extends PreferenceFragmentCompat {
     public static final String PREF_STRIP_LENGTH_KEY = "com.ardnew.blixel.preferences.preference.strip_length";
     public static final String PREF_AUTO_SEND_KEY    = "com.ardnew.blixel.preferences.preference.device_auto_send";
 
+    private MainViewModel viewModel;
     private SharedPreferences sharedPreferences;
 
     private boolean isInitialized = false;
@@ -70,6 +80,60 @@ public class ConfigFragment extends PreferenceFragmentCompat {
     }
 
     @Override
+    public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
+
+        return super.onCreateView(inflater, container, savedInstanceState);
+    }
+
+    public static void setPreference(@NonNull SharedPreferences sharedPreferences, @NonNull String key, Object value) {
+
+        SharedPreferences.Editor editor = sharedPreferences.edit();
+        switch (key) {
+            case ConfigFragment.PREF_DEVICE_KEY:
+                editor.putString(key, (String)value);
+                break;
+            case ConfigFragment.PREF_AUTO_CONNECT_KEY:
+                if (value instanceof Boolean) {
+                    editor.putString(key, value.toString());
+                } else if (value instanceof String) {
+                    editor.putString(key, (String)value);
+                }
+                break;
+            case ConfigFragment.PREF_STRIP_TYPE_KEY:
+            case ConfigFragment.PREF_COLOR_ORDER_KEY:
+            case ConfigFragment.PREF_STRIP_LENGTH_KEY:
+                if (value instanceof Integer) {
+                    editor.putString(key, Utility.format("%d", value));
+                } else if (value instanceof String) {
+                    editor.putString(key, (String)value);
+                }
+                break;
+        }
+        editor.apply();
+    }
+
+    public static Object getPreference(@NonNull SharedPreferences sharedPreferences, @NonNull String key) {
+
+        String value;
+        switch (key) {
+            case ConfigFragment.PREF_DEVICE_KEY:
+                return sharedPreferences.getString(key, null);
+            case ConfigFragment.PREF_AUTO_CONNECT_KEY:
+                value = sharedPreferences.getString(key, "true");
+                return Boolean.valueOf(value);
+            case ConfigFragment.PREF_STRIP_TYPE_KEY:
+            case ConfigFragment.PREF_COLOR_ORDER_KEY:
+            case ConfigFragment.PREF_STRIP_LENGTH_KEY:
+                value = sharedPreferences.getString(key, null);
+                if  (null != value) {
+                    return Utility.parseUint(value);
+                }
+                break;
+        }
+        return null;
+    }
+
+    @Override
     public void onResume() {
 
         super.onResume();
@@ -82,10 +146,17 @@ public class ConfigFragment extends PreferenceFragmentCompat {
 
         if (!this.isInitialized) {
 
+            if (null == this.viewModel) {
+                final FragmentActivity activity = this.getActivity();
+                this.viewModel = new ViewModelProvider((null != activity) ? activity : this).get(MainViewModel.class);
+            }
+
             PreferenceManager preferenceManager = this.getPreferenceManager();
             if (null != preferenceManager) {
                 this.sharedPreferences = preferenceManager.getSharedPreferences();
             }
+
+
 
             this.categoryDevice        = this.findPreference(ConfigFragment.CAT_DEVICE_KEY);
             this.preferenceDevice      = this.findPreference(ConfigFragment.PREF_DEVICE_KEY);

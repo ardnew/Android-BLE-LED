@@ -48,14 +48,20 @@
     <color name="color_button_disabled_surface">@color/color_primary_surface</color>
     <color name="color_button_disabled_text">@color/color_secondary_surface</color>
 
-    <color name="color_toast_surface">@color/color_primary_accent</color>
-    <color name="color_toast_text">@color/color_primary_surface</color>
-    <color name="color_toast_button_text">@color/color_secondary_surface</color>
+    <color name="color_snackbar_surface">@color/color_primary_accent</color>
+    <color name="color_snackbar_text">@color/color_primary_surface</color>
+    <color name="color_snackbar_button_text">@color/color_secondary_surface</color>
+
+    <color name="color_swipe_progress_background">@color/color_primary_accent</color>
+    <color name="color_swipe_progress_foreground1">@color/color_primary_surface</color>
+    <color name="color_swipe_progress_foreground2">@color/color_secondary_surface</color>
+    <color name="color_swipe_progress_foreground3">@color/color_tertiary_surface</color>
+    <color name="color_swipe_progress_foreground4">@color/color_secondary_surface</color>
 
     <color name="color_device_card_header_surface">@color/color_tertiary_surface</color>
     <color name="color_device_card_body_surface">@color/color_secondary_surface</color>
     <color name="color_device_card_address_text">@color/color_primary_text</color>
-    <color name="color_device_card_rssi_text">@color/color_primary_highlight</color>
+    <color name="color_device_card_rssi_text">@color/color_primary_text</color>
     <color name="color_device_card_name_text">@color/color_secondary_text</color>
     <color name="color_device_card_mfg_text">@color/color_tertiary_text</color>
     <color name="color_device_card_services_text">@color/color_tertiary_text</color>

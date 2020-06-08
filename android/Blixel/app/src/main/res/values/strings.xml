@@ -54,9 +54,10 @@
     <string name="title_activity_main">@string/app_name</string>
     <string name="title_activity_scan">Nearby devices</string>
 
-    <string name="scan_begin_text">Scanning for nearby Bluetooth (LE) devices…</string>
-    <string name="connected_toast_format">Connected (%s)</string>
-    <string name="disconnected_toast_format">Disconnected (%s)</string>
+    <string name="snackbar_scan_begin_text">Scanning for nearby Bluetooth (LE) devices…</string>
+    <string name="snackbar_scan_stop_button">Stop</string>
+    <string name="snackbar_connected_format">Connected to %s</string>
+    <string name="snackbar_disconnected_text">Disconnected from device</string>
 
     <string name="scan_menu_text">Connect to device…</string>
     <string name="disconnect_menu_text">Disconnect</string>
@@ -87,5 +88,6 @@
     <string name="device_config_strip_color_title">Color order</string>
     <string name="device_config_strip_color_summary">Ordering of color components expected by LED chipset</string>
     <string name="device_config_strip_length_title">Number of pixels</string>
+
 
 </resources>

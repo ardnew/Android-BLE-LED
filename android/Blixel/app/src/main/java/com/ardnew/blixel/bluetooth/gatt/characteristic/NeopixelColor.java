@@ -27,42 +27,113 @@
 //                                                                             =
 //==============================================================================
 
-package com.ardnew.blixel.bluetooth.attribute.characteristic;
+package com.ardnew.blixel.bluetooth.gatt.characteristic;
 
 import android.bluetooth.BluetoothGattService;
+import android.os.Parcel;
 import android.os.ParcelUuid;
 
 import androidx.annotation.NonNull;
 
-import java.util.Observer;
 import java.util.UUID;
 
-@SuppressWarnings("unused")
 public class NeopixelColor extends Neopixel {
+
+    public static final int MAX_ALPHA  = 0xFF;
+    public static final int MAX_BRIGHT = 0xFF;
+
+    public static final int DEFAULT_START  = 0;
+    public static final int DEFAULT_LENGTH = 0;
+    public static final int DEFAULT_COLOR  = 0xFFFFFFFF;
+    public static final int DEFAULT_ALPHA  = NeopixelColor.MAX_ALPHA;
+    public static final int DEFAULT_BRIGHT = NeopixelColor.MAX_BRIGHT;
 
     private int start;
     private int length;
     private int color;
+    private int alpha;
+    private int bright;
 
     public NeopixelColor(@NonNull BluetoothGattService service) {
 
-        this(service, (Observer)null);
+        super(service);
+
+        this.start  = NeopixelColor.DEFAULT_START;
+        this.length = NeopixelColor.DEFAULT_LENGTH;
+        this.color  = NeopixelColor.DEFAULT_COLOR;
+        this.alpha  = NeopixelColor.DEFAULT_ALPHA;
+        this.bright = NeopixelColor.DEFAULT_BRIGHT;
     }
 
-    public NeopixelColor(@NonNull BluetoothGattService service, Observer...observer) {
+    public NeopixelColor(@NonNull BluetoothGattService service, int start, int length, int color, int alpha, int bright) {
 
-        super(service, observer);
-
-        this.start  = 0;
-        this.length = 0;
-        this.color  = 0;
-    }
-
-    public void setData(int start, int length, int color) {
+        super(service);
 
         this.start  = start;
         this.length = length;
         this.color  = color;
+        this.alpha  = alpha;
+        this.bright = bright;
+    }
+
+    public NeopixelColor(@NonNull BluetoothGattService service, byte[] data) {
+
+        this(service);
+
+        this.unpack(data);
+    }
+
+    public NeopixelColor(Parcel in) {
+
+        super(in);
+
+        this.start  = in.readInt();
+        this.length = in.readInt();
+        this.color  = in.readInt();
+        this.alpha  = in.readInt();
+        this.bright = in.readInt();
+    }
+
+    public static final Creator<NeopixelColor> CREATOR = new Creator<NeopixelColor>() {
+
+        @Override
+        public NeopixelColor createFromParcel(Parcel in) {
+
+            return new NeopixelColor(in);
+        }
+
+        @Override
+        public NeopixelColor[] newArray(int size) {
+
+            return new NeopixelColor[size];
+        }
+    };
+
+    @Override
+    public int describeContents() {
+
+        return 0;
+    }
+
+    @Override
+    public void writeToParcel(Parcel dest, int flags) {
+
+        super.writeToParcel(dest, flags);
+
+        dest.writeInt(this.start);
+        dest.writeInt(this.length);
+        dest.writeInt(this.color);
+        dest.writeInt(this.alpha);
+        dest.writeInt(this.bright);
+    }
+
+    public void setData(int start, int length, int color, int alpha, int bright) {
+
+        this.start  = start;
+        this.length = length;
+        this.color  = color;
+        this.alpha  = alpha;
+        this.bright = bright;
     }
 
     public int start() {
@@ -80,6 +151,16 @@ public class NeopixelColor extends Neopixel {
         return this.color;
     }
 
+    public int alpha() {
+
+        return this.alpha;
+    }
+
+    public int bright() {
+
+        return this.bright;
+    }
+
     @Override
     public UUID uuid() {
 
@@ -89,7 +170,7 @@ public class NeopixelColor extends Neopixel {
     @Override
     public int size() {
 
-        return 8;
+        return 10;
     }
 
     @Override
@@ -103,10 +184,14 @@ public class NeopixelColor extends Neopixel {
         data[2] = (byte)((this.length >> 8) & 0xFF);
         data[3] = (byte)(this.length & 0xFF);
 
-        data[4] = (byte)0xFF; // alpha channel not supported (typecast because byte is signed in java...)
+        data[4] = (byte)0xFF; // alpha sent in separate byte (typecast because byte is signed in java...)
         data[5] = (byte)((this.color >> 16) & 0xFF);
         data[6] = (byte)((this.color >> 8) & 0xFF);
         data[7] = (byte)(this.color & 0xFF);
+
+        data[8] = (byte)(this.alpha & 0xFF);
+
+        data[9] = (byte)(this.bright & 0xFF);
 
         return data;
     }
@@ -115,13 +200,17 @@ public class NeopixelColor extends Neopixel {
     public void unpack(byte[] data) {
 
         if ((null == data) || (data.length < this.size())) {
-            this.start  = 0;
-            this.length = 0;
-            this.color  = 0;
+            this.start  = NeopixelColor.DEFAULT_START;
+            this.length = NeopixelColor.DEFAULT_LENGTH;
+            this.color  = NeopixelColor.DEFAULT_COLOR;
+            this.alpha  = NeopixelColor.DEFAULT_ALPHA;
+            this.bright = NeopixelColor.DEFAULT_BRIGHT;
         } else {
             this.start  = ((int)data[0] << 8) | (int)data[1];
             this.length = ((int)data[2] << 8) | (int)data[3];
             this.color  = ((int)data[4] << 24) | ((int)data[5] << 16) | ((int)data[6] << 8) | (int)data[7];
+            this.alpha  = NeopixelColor.DEFAULT_ALPHA;
+            this.bright = NeopixelColor.DEFAULT_BRIGHT;
         }
     }
 }

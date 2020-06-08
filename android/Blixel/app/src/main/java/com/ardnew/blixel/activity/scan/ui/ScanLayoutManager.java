@@ -27,41 +27,52 @@
 //                                                                             =
 //==============================================================================
 
-package com.ardnew.blixel.bluetooth.scan;
+package com.ardnew.blixel.activity.scan.ui;
 
-import androidx.annotation.NonNull;
+import android.content.Context;
+import android.graphics.PointF;
 
-import com.ardnew.blixel.activity.scan.ScanActivity;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.LinearSmoothScroller;
+import androidx.recyclerview.widget.RecyclerView;
 
-import java.util.List;
+public class ScanLayoutManager extends LinearLayoutManager {
 
-public class Callback extends android.bluetooth.le.ScanCallback {
+    public ScanLayoutManager(Context context) {
 
-    private final ScanActivity scanActivity;
+        super(context, VERTICAL, false);
+    }
 
-    public Callback(@NonNull ScanActivity scanActivity) {
+    public ScanLayoutManager(Context context, int orientation, boolean reverseLayout) {
 
-        this.scanActivity = scanActivity;
+        super(context, orientation, reverseLayout);
     }
 
     @Override
-    public void onScanResult(int callbackType, android.bluetooth.le.ScanResult result) {
+    public void smoothScrollToPosition(RecyclerView recyclerView, RecyclerView.State state, int position) {
 
-        super.onScanResult(callbackType, result);
-        this.scanActivity.runOnUiThread(
-                () -> this.scanActivity.onScanResult(new Result(result))
-        );
+        RecyclerView.SmoothScroller smoothScroller = new TopSnappedSmoothScroller(recyclerView.getContext());
+        smoothScroller.setTargetPosition(position);
+        this.startSmoothScroll(smoothScroller);
     }
 
-    @Override
-    public void onScanFailed(int errorCode) {
+    private class TopSnappedSmoothScroller extends LinearSmoothScroller {
 
-        super.onScanFailed(errorCode);
-    }
+        public TopSnappedSmoothScroller(Context context) {
 
-    @Override
-    public void onBatchScanResults(List<android.bluetooth.le.ScanResult> results) {
+            super(context);
+        }
 
-        super.onBatchScanResults(results);
+        @Override
+        public PointF computeScrollVectorForPosition(int targetPosition) {
+
+            return ScanLayoutManager.this.computeScrollVectorForPosition(targetPosition);
+        }
+
+        @Override
+        protected int getVerticalSnapPreference() {
+
+            return SNAP_TO_START;
+        }
     }
 }

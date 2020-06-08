@@ -41,20 +41,20 @@ import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.SearchView;
 import androidx.appcompat.widget.Toolbar;
-import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
+import androidx.swiperefreshlayout.widget.SwipeRefreshLayout;
 
 import com.ardnew.blixel.R;
 import com.ardnew.blixel.Utility;
+import com.ardnew.blixel.activity.scan.ui.ScanLayoutManager;
 import com.ardnew.blixel.bluetooth.Connection;
 import com.ardnew.blixel.bluetooth.Device;
-import com.ardnew.blixel.bluetooth.Radio;
+import com.ardnew.blixel.bluetooth.Scanner;
 import com.ardnew.blixel.bluetooth.scan.Result;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.google.android.material.snackbar.Snackbar;
 
-@SuppressWarnings("unused")
-public class ScanActivity extends AppCompatActivity {
+public class ScanActivity extends AppCompatActivity implements Scanner.ScanListener, ScanAdapter.ConnectClickListener {
 
     // activity request code, used to identify origin in onActivityResult
     public static final int REQUEST_BLUETOOTH_ENABLE = 0xB00E;
@@ -65,59 +65,23 @@ public class ScanActivity extends AppCompatActivity {
     public static final int SCAN_RESULT_ERROR = 0xB1;
     public static final int SCAN_RESULT_CONNECT = 0xB2;
 
+    private SwipeRefreshLayout swipeRefreshLayout = null;
+    private RecyclerView scanRecyclerView = null;
     private SearchView searchBar = null;
     private ScanAdapter scanAdapter = null;
     private FloatingActionButton refreshButton = null;
     private Snackbar scanningSnackBar = null;
-    private Radio radio = null;
-
-    public SearchView searchBar() {
-
-        return this.searchBar;
-    }
-
-    public ScanAdapter scanAdapter() {
-
-        return this.scanAdapter;
-    }
-
-    public FloatingActionButton refreshButton() {
-
-        return this.refreshButton;
-    }
-
-    public Snackbar scanningSnackBar() {
-
-        return this.scanningSnackBar;
-    }
-
-    public Radio radio() {
-
-        return this.radio;
-    }
+    private Scanner scanner = null;
+    private boolean didSwipeForRefresh = false;
 
     @Override
     protected void onStart() {
 
         super.onStart();
 
-        if (null != this.radio) {
-            this.radio.enableBluetooth();
+        if (null != this.scanner) {
+            this.scanner.enableBluetooth();
         }
-    }
-
-    @SuppressWarnings("EmptyMethod")
-    @Override
-    protected void onResume() {
-
-        super.onResume();
-    }
-
-    @SuppressWarnings("EmptyMethod")
-    @Override
-    protected void onPause() {
-
-        super.onPause();
     }
 
     @Override
@@ -125,23 +89,9 @@ public class ScanActivity extends AppCompatActivity {
 
         super.onStop();
 
-        if (null != this.radio) {
-            this.radio.setIsScanning(false);
+        if (null != this.scanner) {
+            this.scanner.setIsScanning(false);
         }
-    }
-
-    @SuppressWarnings("EmptyMethod")
-    @Override
-    protected void onRestart() {
-
-        super.onRestart();
-    }
-
-    @SuppressWarnings("EmptyMethod")
-    @Override
-    protected void onDestroy() {
-
-        super.onDestroy();
     }
 
     @Override
@@ -149,54 +99,46 @@ public class ScanActivity extends AppCompatActivity {
 
         super.onCreate(savedInstanceState);
 
-        this.setResult(ScanActivity.SCAN_RESULT_OK);
-
         this.setContentView(R.layout.layout_scan);
 
         Toolbar toolBar = this.findViewById(R.id.scan_toolbar);
         this.setSupportActionBar(toolBar);
-
         ActionBar actionBar = this.getSupportActionBar();
         if (null != actionBar) {
             actionBar.setDisplayHomeAsUpEnabled(true);
         }
 
         this.searchBar = this.findViewById(R.id.scan_filter_search_view);
-        this.searchBar.setOnClickListener(
-                v -> ScanActivity.this.searchBar.onActionViewExpanded()
-        );
+        this.searchBar.setOnClickListener(v -> this.searchBar.onActionViewExpanded());
         this.searchBar.setOnFocusChangeListener(
                 (v, hasFocus) -> {
-                    if (!hasFocus) {
+                    if (!hasFocus) { // huzzah!
                         Utility.dismissKeyboard(ScanActivity.this, v);
                     }
                 }
         );
 
+        this.swipeRefreshLayout = this.initSwipeLayout();
+
         this.scanAdapter = new ScanAdapter(this);
 
-        RecyclerView scanView = this.findViewById(R.id.scan_recycler_view);
-        scanView.setLayoutManager(new LinearLayoutManager(this));
-        scanView.setAdapter(this.scanAdapter);
+        this.scanRecyclerView = this.findViewById(R.id.scan_recycler_view);
+        this.scanRecyclerView.setLayoutManager(new ScanLayoutManager(this));
+        this.scanRecyclerView.setAdapter(this.scanAdapter);
 
         this.refreshButton = this.findViewById(R.id.scan_refresh_fab);
-        this.refreshButton.setOnClickListener(
-                v -> ScanActivity.this.radio.setIsScanning(true)
-        );
+        this.refreshButton.setOnClickListener(v -> this.scanner.setIsScanning(true));
 
-        this.scanningSnackBar = Snackbar.make(this.refreshButton, R.string.scan_begin_text, (int) Radio.SCAN_DURATION_MS);
-        this.scanningSnackBar.setBackgroundTint(this.getColor(R.color.color_toast_surface));
-        this.scanningSnackBar.setTextColor(this.getColor(R.color.color_toast_text));
-        this.scanningSnackBar.setActionTextColor(this.getColor(R.color.color_toast_button_text));
-        this.scanningSnackBar.setAction("Stop",
-                v -> ScanActivity.this.radio.setIsScanning(false)
-        );
+        this.scanningSnackBar = Utility.makeSnackBar(this.refreshButton, (int)Scanner.SCAN_DURATION_MS,
+                R.string.snackbar_scan_begin_text, R.string.snackbar_scan_stop_button, v -> this.scanner.setIsScanning(false));
 
         try {
-            this.radio = new Radio(this);
+            this.scanner = new Scanner(this);
         } catch (Exception ex) {
             this.displayFatalAlert("Failed to initialize", ex.getMessage());
         }
+
+        this.setResult(ScanActivity.SCAN_RESULT_OK);
     }
 
     @Override
@@ -208,7 +150,7 @@ public class ScanActivity extends AppCompatActivity {
         switch (requestCode) {
 
             case ScanActivity.REQUEST_BLUETOOTH_ENABLE:
-                if (!this.radio.onEnableBluetoothActivityResult(resultCode)) {
+                if (!this.scanner.onEnableBluetoothActivityResult(resultCode)) {
                     displayFatalAlert("Failed to initialize", this.getString(R.string.fatal_alert_bluetooth_not_enabled));
                 }
                 break;
@@ -224,20 +166,51 @@ public class ScanActivity extends AppCompatActivity {
         switch (requestCode) {
 
             case ScanActivity.REQUEST_BLUETOOTH_PERMISSION:
-                if (!this.radio.onPermitBluetoothScanPermissionsResult(grantResults)) {
+                if (!this.scanner.onPermitBluetoothScanPermissionsResult(grantResults)) {
                     displayFatalAlert("Permission denied", this.getString(R.string.fatal_alert_bluetooth_scan_not_permitted));
                 }
                 break;
         }
     }
 
-    public void onBluetoothRadioReady() {
+    private SwipeRefreshLayout initSwipeLayout() {
 
-        this.radio.setIsScanning(true);
+        SwipeRefreshLayout layout = this.findViewById(R.id.scan_swipe_refresh_layout);
+
+        layout.setOnRefreshListener(() -> {
+            this.didSwipeForRefresh = true;
+            this.scanner.setIsScanning(true);
+        });
+
+        layout.setProgressBackgroundColorSchemeResource(
+                R.color.color_swipe_progress_background
+        );
+
+        layout.setColorSchemeResources(
+                R.color.color_swipe_progress_foreground1,
+                R.color.color_swipe_progress_foreground2,
+                R.color.color_swipe_progress_foreground3,
+                R.color.color_swipe_progress_foreground4
+        );
+
+        return layout;
+    }
+
+    public AppCompatActivity scanActivity() {
+
+        return this;
+    }
+
+    public void onScanReady() {
+
+        this.scanner.setIsScanning(true);
     }
 
     public void onScanStart() {
 
+        if (!this.didSwipeForRefresh) {
+            this.swipeRefreshLayout.setRefreshing(true);
+        }
         this.scanAdapter.clear();
         this.refreshButton.setVisibility(View.GONE);
         this.scanningSnackBar.show();
@@ -245,19 +218,27 @@ public class ScanActivity extends AppCompatActivity {
 
     public void onScanStop() {
 
+        this.swipeRefreshLayout.setRefreshing(false);
+        this.didSwipeForRefresh = false;
         this.refreshButton.setVisibility(View.VISIBLE);
         this.scanningSnackBar.dismiss();
     }
 
-    public void onScanResult(@NonNull Result result) {
+    public void onScanResult(int callbackType, @NonNull Result result) {
 
         this.scanAdapter.add(result);
+
+        if (1 == this.scanAdapter.getItemCount()) {
+            this.scanRecyclerView.smoothScrollToPosition(0);
+        }
     }
 
-    public void onConnectButtonClick(@NonNull Device device) {
+    public void onConnectClick(@NonNull Device device) {
 
-        this.radio.setIsScanning(false);
-        Intent connectionIntent = Connection.Connect.init(this.getApplicationContext(), device.device());
+        this.scanner.setIsScanning(false);
+
+        // return a parcel containing our selected Device object to the calling activity
+        Intent connectionIntent = Connection.ServiceIntent.connect(this.getApplicationContext(), device);
         this.setResult(ScanActivity.SCAN_RESULT_CONNECT, connectionIntent);
         this.finishAndRemoveTask();
     }
@@ -295,7 +276,7 @@ public class ScanActivity extends AppCompatActivity {
         @Override
         public void onClick(DialogInterface dialog, int which) {
 
-            this.activity.radio.setIsScanning(false);
+            this.activity.scanner.setIsScanning(false);
             this.activity.finishAndRemoveTask();
         }
     }
