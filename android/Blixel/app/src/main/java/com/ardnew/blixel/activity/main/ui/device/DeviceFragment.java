@@ -27,7 +27,7 @@
 //                                                                             =
 //==============================================================================
 
-package com.ardnew.blixel.activity.main.ui.config;
+package com.ardnew.blixel.activity.main.ui.device;
 
 import android.content.SharedPreferences;
 import android.os.Bundle;
@@ -48,7 +48,7 @@ import com.ardnew.blixel.R;
 import com.ardnew.blixel.Utility;
 import com.ardnew.blixel.activity.main.MainViewModel;
 
-public class ConfigFragment extends PreferenceFragmentCompat {
+public class DeviceFragment extends PreferenceFragmentCompat {
 
     public static final String CAT_DEVICE_KEY        = "com.ardnew.blixel.preferences.category.device";
     public static final String PREF_DEVICE_KEY       = "com.ardnew.blixel.preferences.preference.device";
@@ -59,7 +59,7 @@ public class ConfigFragment extends PreferenceFragmentCompat {
     public static final String PREF_STRIP_LENGTH_KEY = "com.ardnew.blixel.preferences.preference.strip_length";
     public static final String PREF_AUTO_SEND_KEY    = "com.ardnew.blixel.preferences.preference.device_auto_send";
 
-    private MainViewModel viewModel;
+    private MainViewModel     mainViewModel;
     private SharedPreferences sharedPreferences;
 
     private boolean isInitialized = false;
@@ -74,9 +74,9 @@ public class ConfigFragment extends PreferenceFragmentCompat {
     private Preference         preferenceAutoSend;
 
     @SuppressWarnings("unused")
-    public static ConfigFragment newInstance() {
+    public static DeviceFragment newInstance() {
 
-        return new ConfigFragment();
+        return new DeviceFragment();
     }
 
     @Override
@@ -89,19 +89,19 @@ public class ConfigFragment extends PreferenceFragmentCompat {
 
         SharedPreferences.Editor editor = sharedPreferences.edit();
         switch (key) {
-            case ConfigFragment.PREF_DEVICE_KEY:
+            case DeviceFragment.PREF_DEVICE_KEY:
                 editor.putString(key, (String)value);
                 break;
-            case ConfigFragment.PREF_AUTO_CONNECT_KEY:
+            case DeviceFragment.PREF_AUTO_CONNECT_KEY:
                 if (value instanceof Boolean) {
                     editor.putString(key, value.toString());
                 } else if (value instanceof String) {
                     editor.putString(key, (String)value);
                 }
                 break;
-            case ConfigFragment.PREF_STRIP_TYPE_KEY:
-            case ConfigFragment.PREF_COLOR_ORDER_KEY:
-            case ConfigFragment.PREF_STRIP_LENGTH_KEY:
+            case DeviceFragment.PREF_STRIP_TYPE_KEY:
+            case DeviceFragment.PREF_COLOR_ORDER_KEY:
+            case DeviceFragment.PREF_STRIP_LENGTH_KEY:
                 if (value instanceof Integer) {
                     editor.putString(key, Utility.format("%d", value));
                 } else if (value instanceof String) {
@@ -116,14 +116,14 @@ public class ConfigFragment extends PreferenceFragmentCompat {
 
         String value;
         switch (key) {
-            case ConfigFragment.PREF_DEVICE_KEY:
+            case DeviceFragment.PREF_DEVICE_KEY:
                 return sharedPreferences.getString(key, null);
-            case ConfigFragment.PREF_AUTO_CONNECT_KEY:
+            case DeviceFragment.PREF_AUTO_CONNECT_KEY:
                 value = sharedPreferences.getString(key, "true");
                 return Boolean.valueOf(value);
-            case ConfigFragment.PREF_STRIP_TYPE_KEY:
-            case ConfigFragment.PREF_COLOR_ORDER_KEY:
-            case ConfigFragment.PREF_STRIP_LENGTH_KEY:
+            case DeviceFragment.PREF_STRIP_TYPE_KEY:
+            case DeviceFragment.PREF_COLOR_ORDER_KEY:
+            case DeviceFragment.PREF_STRIP_LENGTH_KEY:
                 value = sharedPreferences.getString(key, null);
                 if  (null != value) {
                     return Utility.parseUint(value);
@@ -146,9 +146,9 @@ public class ConfigFragment extends PreferenceFragmentCompat {
 
         if (!this.isInitialized) {
 
-            if (null == this.viewModel) {
+            if (null == this.mainViewModel) {
                 final FragmentActivity activity = this.getActivity();
-                this.viewModel = new ViewModelProvider((null != activity) ? activity : this).get(MainViewModel.class);
+                this.mainViewModel = new ViewModelProvider((null != activity) ? activity : this).get(MainViewModel.class);
             }
 
             PreferenceManager preferenceManager = this.getPreferenceManager();
@@ -156,16 +156,14 @@ public class ConfigFragment extends PreferenceFragmentCompat {
                 this.sharedPreferences = preferenceManager.getSharedPreferences();
             }
 
-
-
-            this.categoryDevice        = this.findPreference(ConfigFragment.CAT_DEVICE_KEY);
-            this.preferenceDevice      = this.findPreference(ConfigFragment.PREF_DEVICE_KEY);
-            this.preferenceAutoConnect = this.findPreference(ConfigFragment.PREF_AUTO_CONNECT_KEY);
-            this.categoryStrip         = this.findPreference(ConfigFragment.CAT_STRIP_KEY);
-            this.preferenceStripType   = this.findPreference(ConfigFragment.PREF_STRIP_TYPE_KEY);
-            this.preferenceColorOrder  = this.findPreference(ConfigFragment.PREF_COLOR_ORDER_KEY);
-            this.preferenceStripLength = this.findPreference(ConfigFragment.PREF_STRIP_LENGTH_KEY);
-            this.preferenceAutoSend    = this.findPreference(ConfigFragment.PREF_AUTO_SEND_KEY);
+            this.categoryDevice        = this.findPreference(DeviceFragment.CAT_DEVICE_KEY);
+            this.preferenceDevice      = this.findPreference(DeviceFragment.PREF_DEVICE_KEY);
+            this.preferenceAutoConnect = this.findPreference(DeviceFragment.PREF_AUTO_CONNECT_KEY);
+            this.categoryStrip         = this.findPreference(DeviceFragment.CAT_STRIP_KEY);
+            this.preferenceStripType   = this.findPreference(DeviceFragment.PREF_STRIP_TYPE_KEY);
+            this.preferenceColorOrder  = this.findPreference(DeviceFragment.PREF_COLOR_ORDER_KEY);
+            this.preferenceStripLength = this.findPreference(DeviceFragment.PREF_STRIP_LENGTH_KEY);
+            this.preferenceAutoSend    = this.findPreference(DeviceFragment.PREF_AUTO_SEND_KEY);
             this.isInitialized         = true;
         }
     }

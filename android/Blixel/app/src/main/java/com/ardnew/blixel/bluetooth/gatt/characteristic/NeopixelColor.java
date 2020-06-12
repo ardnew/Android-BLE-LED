@@ -184,7 +184,7 @@ public class NeopixelColor extends Neopixel {
         data[2] = (byte)((this.length >> 8) & 0xFF);
         data[3] = (byte)(this.length & 0xFF);
 
-        data[4] = (byte)0xFF; // alpha sent in separate byte (typecast because byte is signed in java...)
+        data[4] = (byte)((this.color >> 24) & 0xFF);
         data[5] = (byte)((this.color >> 16) & 0xFF);
         data[6] = (byte)((this.color >> 8) & 0xFF);
         data[7] = (byte)(this.color & 0xFF);
@@ -206,9 +206,9 @@ public class NeopixelColor extends Neopixel {
             this.alpha  = NeopixelColor.DEFAULT_ALPHA;
             this.bright = NeopixelColor.DEFAULT_BRIGHT;
         } else {
-            this.start  = ((int)data[0] << 8) | (int)data[1];
-            this.length = ((int)data[2] << 8) | (int)data[3];
-            this.color  = ((int)data[4] << 24) | ((int)data[5] << 16) | ((int)data[6] << 8) | (int)data[7];
+            this.start  = ((int)data[0] << 8) | ((int)data[1] & 0xFF);
+            this.length = ((int)data[2] << 8) | ((int)data[3] & 0xFF);
+            this.color  = ((int)data[4] << 24) | ((int)data[5] << 16) | ((int)data[6] << 8) | ((int)data[7] & 0xFF);
             this.alpha  = NeopixelColor.DEFAULT_ALPHA;
             this.bright = NeopixelColor.DEFAULT_BRIGHT;
         }

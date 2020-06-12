@@ -56,14 +56,10 @@
         android:label="@string/menu_motion"
         tools:layout="@layout/fragment_motion" />
     <fragment
-        android:id="@+id/nav_devices"
-        android:name="com.ardnew.blixel.activity.main.ui.devices.DevicesFragment"
-        android:label="@string/menu_devices"
-        tools:layout="@layout/fragment_devices" />
-    <fragment
-        android:id="@+id/nav_config"
-        android:name="com.ardnew.blixel.activity.main.ui.config.ConfigFragment"
-        android:label="@string/menu_config"
-        tools:layout="@layout/fragment_config" />
+        android:id="@+id/nav_device"
+        android:name="com.ardnew.blixel.activity.main.ui.device.DeviceFragment"
+        android:label="@string/menu_device"
+        tools:layout="@layout/fragment_device" />
+
 
 </navigation>

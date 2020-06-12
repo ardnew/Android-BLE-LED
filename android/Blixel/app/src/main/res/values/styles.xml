@@ -38,6 +38,11 @@
         <item name="android:alertDialogTheme">@style/AppTheme.AlertDialog</item>
     </style>
 
+    <style name="AppTheme.NoActionBar">
+        <item name="windowActionBar">false</item>
+        <item name="windowNoTitle">true</item>
+    </style>
+
     <style name="AppTheme.Toolbar" parent="ThemeOverlay.MaterialComponents.Dark.ActionBar">
         <item name="android:colorPrimary">@color/color_tertiary_surface</item>
         <item name="android:colorPrimaryDark">@color/color_secondary_surface</item>

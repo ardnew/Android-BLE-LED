@@ -50,7 +50,7 @@ import com.flask.colorpicker.slider.LightnessSlider;
 
 public class ColorFragment extends Fragment implements OnColorChangedListener {
 
-    private MainViewModel viewModel;
+    private MainViewModel mainViewModel;
     private ColorPickerView colorPickerView;
     private AlphaSlider alphaSlider;
     private LightnessSlider lightnessSlider;
@@ -76,7 +76,7 @@ public class ColorFragment extends Fragment implements OnColorChangedListener {
         if (!this.isInitialized) {
 
             final FragmentActivity activity = this.getActivity();
-            this.viewModel = new ViewModelProvider((null != activity) ? activity : this).get(MainViewModel.class);
+            this.mainViewModel = new ViewModelProvider((null != activity) ? activity : this).get(MainViewModel.class);
 
             this.colorPickerView = root.findViewById(R.id.color_picker_view);
             this.colorPickerView.addOnColorChangedListener(this);
@@ -101,8 +101,8 @@ public class ColorFragment extends Fragment implements OnColorChangedListener {
 
         super.onResume();
 
-        if (null != this.viewModel) {
-            final NeopixelColor neopixelColor = this.viewModel.getNeopixelColor();
+        if (null != this.mainViewModel) {
+            final NeopixelColor neopixelColor = this.mainViewModel.getNeopixelColor();
             if ((null != neopixelColor) && neopixelColor.isValid()) {
 
                 this.selectedColor  = neopixelColor.color();
@@ -121,7 +121,7 @@ public class ColorFragment extends Fragment implements OnColorChangedListener {
 
         this.selectedColor = selectedColor;
 
-        this.viewModel.updateNeopixelColor(selectedColor, this.selectedAlpha, this.selectedBright);
+        this.mainViewModel.updateNeopixelColor(selectedColor, this.selectedAlpha, this.selectedBright);
     }
 
     public void onAlphaChanged(float value) {

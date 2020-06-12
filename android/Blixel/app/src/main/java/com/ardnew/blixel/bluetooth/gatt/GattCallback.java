@@ -50,14 +50,14 @@ import java.util.UUID;
 
 public class GattCallback extends BluetoothGattCallback {
 
-    private final MainViewModel viewModel;
+    private final MainViewModel mainViewModel;
     private Device device;
     private BluetoothGatt bluetoothGatt;
     private Runnable reconnect;
 
-    public GattCallback(MainViewModel viewModel) {
+    public GattCallback(MainViewModel mainViewModel) {
 
-        this.viewModel = viewModel;
+        this.mainViewModel = mainViewModel;
 
         this.device = null;
         this.bluetoothGatt = null;
@@ -66,7 +66,7 @@ public class GattCallback extends BluetoothGattCallback {
 
     public void connect(@NonNull final Device device) {
 
-        Connection connection = this.viewModel.getConnection();
+        Connection connection = this.mainViewModel.getConnection();
         if (null != connection) {
 
             this.device = device;
@@ -74,7 +74,7 @@ public class GattCallback extends BluetoothGattCallback {
             //noinspection CodeBlock2Expr
             Runnable connect = () -> {
                 this.bluetoothGatt = device.connect(
-                    connection.getApplicationContext(), this.viewModel.getAutoConnect(), this
+                    connection.getApplicationContext(), this.mainViewModel.getAutoConnect(), this
                 );
             };
 
@@ -82,7 +82,7 @@ public class GattCallback extends BluetoothGattCallback {
                 this.reconnect = connect;
                 this.disconnect(true);
             } else {
-                if (this.viewModel.getAutoConnect()) {
+                if (this.mainViewModel.getAutoConnect()) {
                     this.reconnect = connect;
                 }
                 connection.run(connect);
@@ -96,7 +96,7 @@ public class GattCallback extends BluetoothGattCallback {
             this.reconnect = null;
         }
 
-        Connection connection = this.viewModel.getConnection();
+        Connection connection = this.mainViewModel.getConnection();
         if ((null != connection) && (null != this.bluetoothGatt)) {
             connection.run(() -> this.bluetoothGatt.disconnect());
         }
@@ -121,9 +121,9 @@ public class GattCallback extends BluetoothGattCallback {
 
             this.device.setIsConnected(true);
 
-            this.viewModel.runInForeground(() -> this.viewModel.setConnectedDevice(this.device));
+            this.mainViewModel.runInForeground(() -> this.mainViewModel.setConnectedDevice(this.device));
 
-            Connection connection = this.viewModel.getConnection();
+            Connection connection = this.mainViewModel.getConnection();
             if ((null != connection) && (null != this.bluetoothGatt)) {
                 connection.run(() -> this.bluetoothGatt.discoverServices());
             }
@@ -131,10 +131,10 @@ public class GattCallback extends BluetoothGattCallback {
         } else if (newState == BluetoothProfile.STATE_DISCONNECTED) {
 
             this.device.setIsConnected(false);
-            this.viewModel.runInForeground(() -> this.viewModel.setConnectedDevice(null));
+            this.mainViewModel.runInForeground(() -> this.mainViewModel.setConnectedDevice(null));
 
             if (null != this.reconnect) {
-                Connection connection = this.viewModel.getConnection();
+                Connection connection = this.mainViewModel.getConnection();
                 if (null != connection) {
                     connection.run(this.reconnect);
                 }
@@ -154,11 +154,14 @@ public class GattCallback extends BluetoothGattCallback {
             final NeopixelColor color = new NeopixelColor(service);
             final NeopixelAnima anima = new NeopixelAnima(service);
 
-            this.viewModel.runInForeground(() -> {
-                this.viewModel.setNeopixelService(service);
-                this.viewModel.setNeopixelStrip(strip);
-                this.viewModel.setNeopixelColor(color);
-                this.viewModel.setNeopixelAnima(anima);
+            this.mainViewModel.runInForeground(() -> {
+                this.mainViewModel.setNeopixelService(service);
+                this.mainViewModel.setNeopixelStrip(strip);
+                this.mainViewModel.setNeopixelColor(color);
+                this.mainViewModel.setNeopixelAnima(anima);
+                //this.viewModel.updateNeopixelAnimaWheel(1);
+                //this.viewModel.updateNeopixelAnimaChase(1, 4, 0xFFFF00FF, 0x00000000);
+                //this.viewModel.updateNeopixelAnimaFade(3, 0xFF, 0xFFFF0000, 0xFF0000FF);
             });
 
             this.request(strip);
@@ -176,21 +179,21 @@ public class GattCallback extends BluetoothGattCallback {
             UUID uuid = characteristic.getUuid();
             if (null != uuid) {
 
-                final BluetoothGattService neopixelService = this.viewModel.getNeopixelService();
+                final BluetoothGattService neopixelService = this.mainViewModel.getNeopixelService();
                 final byte[] value = characteristic.getValue();
 
                 Runnable action = null;
 
-                if (uuid.equals(this.viewModel.getNeopixelStrip().uuid())) {
-                    action = () -> this.viewModel.setNeopixelStrip(new NeopixelStrip(neopixelService, value));
-                } else if (uuid.equals(this.viewModel.getNeopixelColor().uuid())) {
-                    action = () -> this.viewModel.setNeopixelColor(new NeopixelColor(neopixelService, value));
-                } else if (uuid.equals(this.viewModel.getNeopixelAnima().uuid())) {
-                    action = () -> this.viewModel.setNeopixelAnima(new NeopixelAnima(neopixelService, value));
+                if (uuid.equals(this.mainViewModel.getNeopixelStrip().uuid())) {
+                    action = () -> this.mainViewModel.setNeopixelStrip(new NeopixelStrip(neopixelService, value));
+                } else if (uuid.equals(this.mainViewModel.getNeopixelColor().uuid())) {
+                    action = () -> this.mainViewModel.setNeopixelColor(new NeopixelColor(neopixelService, value));
+                } else if (uuid.equals(this.mainViewModel.getNeopixelAnima().uuid())) {
+                    action = () -> this.mainViewModel.setNeopixelAnima(new NeopixelAnima(neopixelService, value));
                 }
 
                 if (null != action) {
-                    this.viewModel.runInForeground(action);
+                    this.mainViewModel.runInForeground(action);
                 }
             }
         }
@@ -205,7 +208,7 @@ public class GattCallback extends BluetoothGattCallback {
     public void transmit(@NonNull final Neopixel ...neopixel) {
 
 
-        Connection connection = this.viewModel.getConnection();
+        Connection connection = this.mainViewModel.getConnection();
         if ((null != connection) && this.isConnectedToDevice()) {
             Utility.RunList runList = new Utility.RunList();
             for (final Neopixel pixel : neopixel) {
@@ -219,7 +222,7 @@ public class GattCallback extends BluetoothGattCallback {
 
     public void request(@NonNull final Neopixel ...neopixel) {
 
-        Connection connection = this.viewModel.getConnection();
+        Connection connection = this.mainViewModel.getConnection();
         if ((null != connection) && this.isConnectedToDevice()) {
             Utility.RunList runList = new Utility.RunList();
             for (final Neopixel pixel : neopixel) {

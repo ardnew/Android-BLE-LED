@@ -28,26 +28,33 @@
 <!--                                                                         -->
 <!--=========================================================================-->
 
-<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.constraintlayout.widget.ConstraintLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/color_fragment_layout"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     tools:context=".activity.main.ui.color.ColorFragment">
 
-    <LinearLayout
+    <ScrollView
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:orientation="vertical"
-        android:paddingStart="24dp"
-        android:paddingTop="36dp"
-        android:paddingEnd="24dp">
+        android:layout_height="match_parent">
 
-        <include
-            layout="@layout/view_color_picker"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content" />
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:paddingStart="24dp"
+            android:paddingTop="36dp"
+            android:paddingEnd="24dp">
 
-    </LinearLayout>
+            <include
+                layout="@layout/view_color_picker"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content" />
+
+        </LinearLayout>
+
+    </ScrollView>
 
 </androidx.constraintlayout.widget.ConstraintLayout>

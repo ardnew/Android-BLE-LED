@@ -42,8 +42,7 @@
     <string name="menu_controller_group">Controllers</string>
 
     <string name="menu_home">Home</string>
-    <string name="menu_devices">Connect</string>
-    <string name="menu_config">Configure</string>
+    <string name="menu_device">Device</string>
     <string name="menu_color">Color</string>
     <string name="menu_effects">Effects</string>
     <string name="menu_motion">Motion</string>
@@ -53,6 +52,23 @@
 
     <string name="title_activity_main">@string/app_name</string>
     <string name="title_activity_scan">Nearby devices</string>
+
+    <string name="home_fragment_connect_card_disconnected_image_description">Not connected to LED strip</string>
+    <string name="home_fragment_connect_card_disconnected_label">Not connected</string>
+
+    <string name="home_fragment_connect_card_connected_image_description">Connected to LED strip</string>
+
+    <string name="home_fragment_connect_card_connected_device_prompt">Device</string>
+    <string name="home_fragment_connect_card_connected_device_label">Name</string>
+    <string name="home_fragment_connect_card_connected_address_prompt">Address</string>
+    <string name="home_fragment_connect_card_connected_address_label">MAC</string>
+    <string name="home_fragment_connect_card_connected_chipset_prompt">Chipset</string>
+    <string name="home_fragment_connect_card_connected_chipset_label">Color Order, Chipset</string>
+    <string name="home_fragment_connect_card_connected_length_prompt">Length</string>
+    <string name="home_fragment_connect_card_connected_length_label">N pixels</string>
+
+    <string name="home_fragment_connect_button_disconnected">Connect to device</string>
+    <string name="home_fragment_connect_button_connected">Disconnect</string>
 
     <string name="snackbar_scan_begin_text">Scanning for nearby Bluetooth (LE) devices…</string>
     <string name="snackbar_scan_stop_button">Stop</string>

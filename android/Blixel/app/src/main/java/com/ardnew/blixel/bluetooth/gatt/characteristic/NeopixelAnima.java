@@ -48,8 +48,11 @@ public class NeopixelAnima extends Neopixel {
 
     public enum Mode implements Parcelable {
 
-        NONE("None", null),        // = 0
-        RAINBOW("Rainbow", new Rainbow()); // = 1
+        NONE("None", null),
+        WHEEL("Wheel", new Wheel()), // = 1
+        CHASE("Chase", new Chase()), // = 2
+        SCAN("Scan", new Scan()),    // = 3
+        FADE("Fade", new Fade());    // = 4
 
         private static final Mode DEFAULT = Mode.NONE;
 
@@ -117,16 +120,23 @@ public class NeopixelAnima extends Neopixel {
         }
     }
 
+    public static final boolean REVERSE_DEFAULT = true;
+    public static final short DELAY_DEFAULT_MS = 5; // milliseconds
+
     private Mode mode;
+    private boolean reverse;
+    private short delay; // milliseconds
 
     public NeopixelAnima(@NonNull BluetoothGattService service) {
 
         super(service);
 
-        this.mode = Mode.DEFAULT;
+        this.mode    = Mode.DEFAULT;
+        this.reverse = NeopixelAnima.REVERSE_DEFAULT;
+        this.delay   = NeopixelAnima.DELAY_DEFAULT_MS;
     }
 
-    public NeopixelAnima(@NonNull BluetoothGattService service, Mode mode, byte[] aniData) {
+    public NeopixelAnima(@NonNull BluetoothGattService service, Mode mode, boolean reverse, int delay, byte[] aniData) {
 
         super(service);
 
@@ -137,6 +147,8 @@ public class NeopixelAnima extends Neopixel {
             }
         }
         this.setMode(mode);
+        this.setReverse(reverse);
+        this.setDelay(delay);
     }
 
     public NeopixelAnima(@NonNull BluetoothGattService service, byte[] data) {
@@ -151,6 +163,8 @@ public class NeopixelAnima extends Neopixel {
         super(in);
 
         this.mode = in.readParcelable(Mode.class.getClassLoader());
+        this.reverse = in.readByte() != 0;
+        this.delay = (short)(in.readInt() & 0xFF);
     }
 
     public static final Creator<NeopixelAnima> CREATOR = new Creator<NeopixelAnima>() {
@@ -180,6 +194,8 @@ public class NeopixelAnima extends Neopixel {
         super.writeToParcel(dest, flags);
 
         dest.writeParcelable(this.mode, flags);
+        dest.writeByte((byte)(this.reverse ? ~0 : 0));
+        dest.writeInt((short)(this.delay & 0xFF));
     }
 
     public void setMode(Mode mode) {
@@ -203,14 +219,71 @@ public class NeopixelAnima extends Neopixel {
         this.setMode(Mode.fromId(id), aniData);
     }
 
-    public void setModeRainbow(int speed) {
+    public void setReverse(boolean reverse) {
 
-        this.setMode(Mode.RAINBOW.ordinal(), new Rainbow(speed).pack());
+        this.reverse = reverse;
+    }
+
+    public void setReverse(int reverse) {
+
+        this.reverse = 0 != reverse;
+    }
+
+    public void setDelay(short delay) {
+
+        this.delay = delay;
+    }
+
+    public void setDelay(int delay) {
+
+        this.setDelay((short)(delay & 0xFF));
+    }
+
+    public void setModeNone() {
+
+        this.setMode(Mode.NONE);
+    }
+
+    public void setModeWheel(int speed) {
+
+        this.setMode(Mode.WHEEL, new Wheel(speed).pack());
+    }
+
+    public void setModeChase(int speed, int length, int color1, int color2) {
+
+        this.setMode(Mode.CHASE, new Chase(speed, length, color1, color2).pack());
+    }
+
+    public void setModeScan(int speed) {
+
+        this.setMode(Mode.SCAN, new Scan(speed).pack());
+    }
+
+    public void setModeFade(int speed, int length, int color1, int color2) {
+
+        this.setMode(Mode.FADE, new Fade(speed, length, color1, color2).pack());
     }
 
     public Mode mode() {
 
         return this.mode;
+    }
+
+    public boolean reverse() {
+
+        return this.reverse;
+    }
+
+    public int delay() {
+
+        return this.delay;
+    }
+
+    public int fixedSize() {
+
+        return 3; // size (in bytes) of the fixed region of the characteristic packet common to all
+                  // animation modes.
+                  // this includes 1 byte for mode + 1 byte for reverse + 1 byte for delay.
     }
 
     @Override
@@ -224,9 +297,9 @@ public class NeopixelAnima extends Neopixel {
 
         Animation animation = this.mode.animation();
         if (null != animation) {
-            return animation.size() + 2; // +2 for 16-bit command ID (enum Mode value)
+            return animation.size() + this.fixedSize();
         }
-        return 2;
+        return this.fixedSize();
     }
 
     @Override
@@ -234,14 +307,15 @@ public class NeopixelAnima extends Neopixel {
 
         byte[] data = new byte[this.size()];
 
-        data[0] = (byte)((this.mode.ordinal() >> 8) & 0xFF);
-        data[1] = (byte)(this.mode.ordinal() & 0xFF);
+        data[0] = (byte)(this.mode.ordinal() & 0xFF);
+        data[1] = (byte)(this.reverse ? ~0 : 0);
+        data[2] = (byte)(this.delay & 0xFF);
 
         Animation animation = this.mode.animation();
         if ((null != animation) && (animation.size() > 0)) {
             byte[] aniData = animation.pack();
             if (animation.size() >= 0) {
-                System.arraycopy(aniData, 0, data, 2, animation.size());
+                System.arraycopy(aniData, 0, data, this.fixedSize(), animation.size());
             }
         }
 
@@ -253,14 +327,18 @@ public class NeopixelAnima extends Neopixel {
 
         if ((null == data) || (data.length < this.size())) {
             this.mode = Mode.DEFAULT;
+            this.reverse = NeopixelAnima.REVERSE_DEFAULT;
+            this.delay = NeopixelAnima.DELAY_DEFAULT_MS;
         } else {
-            this.mode = Mode.fromId(((int)data[0] << 8) | (int)data[1]);
+            this.mode = Mode.fromId(data[0]);
+            this.reverse = 0 != data[1];
+            this.delay = data[2];
             if (null != this.mode) {
                 Animation animation = this.mode.animation();
                 if (null != animation) {
                     byte[] aniData = new byte[animation.size()];
                     if (animation.size() >= 0) {
-                        System.arraycopy(data, 2, aniData, 0, animation.size());
+                        System.arraycopy(data, this.fixedSize(), aniData, 0, animation.size());
                         animation.unpack(aniData);
                     }
                 }
@@ -268,39 +346,39 @@ public class NeopixelAnima extends Neopixel {
         }
     }
 
-    public static class Rainbow extends Animation {
+    public static class Wheel extends Animation {
 
-        static final int DEFAULT_SPEED = 10;
+        static final int DEFAULT_SPEED = 1;
 
         private int speed;
 
-        Rainbow() {
+        Wheel() {
 
-            this(Rainbow.DEFAULT_SPEED);
+            this(Wheel.DEFAULT_SPEED);
         }
 
-        Rainbow(int speed) {
+        Wheel(int speed) {
 
             this.speed = speed;
         }
 
-        Rainbow(Parcel in) {
+        Wheel(Parcel in) {
 
             this.speed = in.readInt();
         }
 
-        public static final Creator<Rainbow> CREATOR = new Creator<Rainbow>() {
+        public static final Creator<Wheel> CREATOR = new Creator<Wheel>() {
 
             @Override
-            public Rainbow createFromParcel(Parcel in) {
+            public Wheel createFromParcel(Parcel in) {
 
-                return new Rainbow(in);
+                return new Wheel(in);
             }
 
             @Override
-            public Rainbow[] newArray(int size) {
+            public Wheel[] newArray(int size) {
 
-                return new Rainbow[size];
+                return new Wheel[size];
             }
         };
 
@@ -319,7 +397,190 @@ public class NeopixelAnima extends Neopixel {
         @Override
         public int size() {
 
-            return 2;
+            return 1; // size (in bytes) of the additional animation data specific to this mode.
+                      // includes 1 byte for speed (8-bit).
+        }
+
+        @Override
+        public byte[] pack() {
+
+            byte[] data = new byte[this.size()];
+
+            data[0] = (byte)(this.speed & 0xFF);
+
+            return data;
+        }
+
+        @Override
+        public void unpack(byte[] data) {
+
+            if ((null == data) || (data.length < this.size())) {
+                this.speed = Wheel.DEFAULT_SPEED;
+            } else {
+                this.speed = data[0];
+            }
+        }
+    }
+
+    public static class Chase extends Animation {
+
+        static final int DEFAULT_SPEED  = 1;
+        static final int DEFAULT_LENGTH = 3;
+        static final int DEFAULT_COLOR1 = 0xFFFFFFFF;
+        static final int DEFAULT_COLOR2 = 0x00000000;
+
+        private int speed;
+        private int length;
+        private int color1;
+        private int color2;
+
+        Chase() {
+
+            this(Chase.DEFAULT_SPEED, Chase.DEFAULT_LENGTH, Chase.DEFAULT_COLOR1, Chase.DEFAULT_COLOR2);
+        }
+
+        Chase(int speed, int length, int color1, int color2) {
+
+            this.speed  = speed;
+            this.length = length;
+            this.color1 = color1;
+            this.color2 = color2;
+        }
+
+        Chase(Parcel in) {
+
+            this.speed = in.readInt();
+            this.length = in.readInt();
+            this.color1 = in.readInt();
+            this.color2 = in.readInt();
+        }
+
+        public static final Creator<Chase> CREATOR = new Creator<Chase>() {
+
+            @Override
+            public Chase createFromParcel(Parcel in) {
+
+                return new Chase(in);
+            }
+
+            @Override
+            public Chase[] newArray(int size) {
+
+                return new Chase[size];
+            }
+        };
+
+        @Override
+        public int describeContents() {
+
+            return 0;
+        }
+
+        @Override
+        public void writeToParcel(Parcel dest, int flags) {
+
+            dest.writeInt(this.speed);
+            dest.writeInt(this.length);
+            dest.writeInt(this.color1);
+            dest.writeInt(this.color2);
+        }
+
+        @Override
+        public int size() {
+
+            return 10; // size (in bytes) of the additional animation data specific to this mode.
+                       // includes 1 byte for speed (8-bit), 1 byte for length (8-bit),
+                       // 8 bytes for color1/color2 (both 32-bit).
+        }
+
+        @Override
+        public byte[] pack() {
+
+            byte[] data = new byte[this.size()];
+
+            data[0] = (byte)(this.speed & 0xFF);
+            data[1] = (byte)(this.length & 0xFF);
+            data[2] = (byte)((this.color1 >> 24) & 0xFF);
+            data[3] = (byte)((this.color1 >> 16) & 0xFF);
+            data[4] = (byte)((this.color1 >> 8) & 0xFF);
+            data[5] = (byte)(this.color1 & 0xFF);
+            data[6] = (byte)((this.color2 >> 24) & 0xFF);
+            data[7] = (byte)((this.color2 >> 16) & 0xFF);
+            data[8] = (byte)((this.color2 >> 8) & 0xFF);
+            data[9] = (byte)(this.color2 & 0xFF);
+            return data;
+        }
+
+        @Override
+        public void unpack(byte[] data) {
+
+            if ((null == data) || (data.length < this.size())) {
+                this.speed = Chase.DEFAULT_SPEED;
+                this.length = Chase.DEFAULT_LENGTH;
+                this.color1 = Chase.DEFAULT_COLOR1;
+                this.color2 = Chase.DEFAULT_COLOR2;
+            } else {
+                this.speed = data[0];
+                this.length = data[1];
+                this.color1 = ((int)data[2] << 24) | ((int)data[3] << 16) | ((int)data[4] << 8) | ((int)data[5] & 0xFF);
+                this.color2 = ((int)data[6] << 24) | ((int)data[7] << 16) | ((int)data[8] << 8) | ((int)data[9] & 0xFF);
+            }
+        }
+    }
+
+    public static class Scan extends Animation {
+
+        static final int DEFAULT_SPEED = 10;
+
+        private int speed;
+
+        Scan() {
+
+            this(Scan.DEFAULT_SPEED);
+        }
+
+        Scan(int speed) {
+
+            this.speed = speed;
+        }
+
+        Scan(Parcel in) {
+
+            this.speed = in.readInt();
+        }
+
+        public static final Creator<Scan> CREATOR = new Creator<Scan>() {
+
+            @Override
+            public Scan createFromParcel(Parcel in) {
+
+                return new Scan(in);
+            }
+
+            @Override
+            public Scan[] newArray(int size) {
+
+                return new Scan[size];
+            }
+        };
+
+        @Override
+        public int describeContents() {
+
+            return 0;
+        }
+
+        @Override
+        public void writeToParcel(Parcel dest, int flags) {
+
+            dest.writeInt(this.speed);
+        }
+
+        @Override
+        public int size() {
+
+            return 2; // size (in bytes) of the additional animation data specific to this mode.
+                      // includes 2 bytes for speed (16-bit).
         }
 
         @Override
@@ -337,9 +598,116 @@ public class NeopixelAnima extends Neopixel {
         public void unpack(byte[] data) {
 
             if ((null == data) || (data.length < this.size())) {
-                this.speed = Rainbow.DEFAULT_SPEED;
+                this.speed = Scan.DEFAULT_SPEED;
             } else {
                 this.speed = ((int)data[0] << 8) | (int)data[1];
+            }
+        }
+    }
+
+
+    public static class Fade extends Animation {
+
+        static final int DEFAULT_SPEED  = 5;
+        static final int DEFAULT_LENGTH = 0xFF;
+        static final int DEFAULT_COLOR1 = 0xFFFFFFFF;
+        static final int DEFAULT_COLOR2 = 0x00000000;
+
+        private int speed;
+        private int length;
+        private int color1;
+        private int color2;
+
+        Fade() {
+
+            this(Fade.DEFAULT_SPEED, Fade.DEFAULT_LENGTH, Fade.DEFAULT_COLOR1, Fade.DEFAULT_COLOR2);
+        }
+
+        Fade(int speed, int length, int color1, int color2) {
+
+            this.speed  = speed;
+            this.length = length;
+            this.color1 = color1;
+            this.color2 = color2;
+        }
+
+        Fade(Parcel in) {
+
+            this.speed = in.readInt();
+            this.length = in.readInt();
+            this.color1 = in.readInt();
+            this.color2 = in.readInt();
+        }
+
+        public static final Creator<Fade> CREATOR = new Creator<Fade>() {
+
+            @Override
+            public Fade createFromParcel(Parcel in) {
+
+                return new Fade(in);
+            }
+
+            @Override
+            public Fade[] newArray(int size) {
+
+                return new Fade[size];
+            }
+        };
+
+        @Override
+        public int describeContents() {
+
+            return 0;
+        }
+
+        @Override
+        public void writeToParcel(Parcel dest, int flags) {
+
+            dest.writeInt(this.speed);
+            dest.writeInt(this.length);
+            dest.writeInt(this.color1);
+            dest.writeInt(this.color2);
+        }
+
+        @Override
+        public int size() {
+
+            return 10; // size (in bytes) of the additional animation data specific to this mode.
+                       // includes 1 byte for speed (8-bit), 1 byte for length (8-bit),
+                       // 8 bytes for color1/color2 (both 32-bit).
+        }
+
+        @Override
+        public byte[] pack() {
+
+            byte[] data = new byte[this.size()];
+
+            data[0] = (byte)(this.speed & 0xFF);
+            data[1] = (byte)(this.length & 0xFF);
+            data[2] = (byte)((this.color1 >> 24) & 0xFF);
+            data[3] = (byte)((this.color1 >> 16) & 0xFF);
+            data[4] = (byte)((this.color1 >> 8) & 0xFF);
+            data[5] = (byte)(this.color1 & 0xFF);
+            data[6] = (byte)((this.color2 >> 24) & 0xFF);
+            data[7] = (byte)((this.color2 >> 16) & 0xFF);
+            data[8] = (byte)((this.color2 >> 8) & 0xFF);
+            data[9] = (byte)(this.color2 & 0xFF);
+            return data;
+        }
+
+        @Override
+        public void unpack(byte[] data) {
+
+            if ((null == data) || (data.length < this.size())) {
+                this.speed = Fade.DEFAULT_SPEED;
+                this.length = Fade.DEFAULT_LENGTH;
+                this.color1 = Fade.DEFAULT_COLOR1;
+                this.color2 = Fade.DEFAULT_COLOR2;
+            } else {
+                this.speed = data[0];
+                this.length = data[1];
+                this.color1 = ((int)data[2] << 24) | ((int)data[3] << 16) | ((int)data[4] << 8) | ((int)data[5] & 0xFF);
+                this.color2 = ((int)data[6] << 24) | ((int)data[7] << 16) | ((int)data[8] << 8) | ((int)data[9] & 0xFF);
             }
         }
     }

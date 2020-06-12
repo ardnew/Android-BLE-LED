@@ -62,7 +62,8 @@
         <activity
             android:name=".activity.scan.ScanActivity"
             android:label="@string/title_activity_scan"
-            android:parentActivityName=".activity.main.MainActivity">
+            android:parentActivityName=".activity.main.MainActivity"
+            android:theme="@style/AppTheme.NoActionBar">
             <meta-data
                 android:name="android.support.PARENT_ACTIVITY"
                 android:value="com.ardnew.blixel.activity.main.MainActivity" />
@@ -70,7 +71,9 @@
 
         <activity
             android:name=".activity.main.MainActivity"
-            android:label="@string/title_activity_main">
+            android:label="@string/title_activity_main"
+            android:launchMode="singleTop"
+            android:theme="@style/AppTheme.NoActionBar">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />

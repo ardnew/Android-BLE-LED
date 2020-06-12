@@ -28,56 +28,29 @@
 <!--                                                                         -->
 <!--=========================================================================-->
 
-<androidx.coordinatorlayout.widget.CoordinatorLayout
-    xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
-    xmlns:tools="http://schemas.android.com/tools"
-    android:id="@+id/config_fragment_layout"
-    android:layout_width="match_parent"
-    android:layout_height="match_parent"
-    android:fitsSystemWindows="true"
-    tools:context=".activity.main.ui.config.ConfigFragment">
+<layer-list
+    xmlns:android="http://schemas.android.com/apk/res/android">
 
-    <com.google.android.material.appbar.AppBarLayout
-        android:id="@+id/config_app_bar"
-        android:layout_width="match_parent"
-        android:layout_height="@dimen/app_bar_height"
-        android:fitsSystemWindows="true"
-        android:theme="@style/AppTheme.Toolbar">
+    <item>
+        <shape
+            android:shape="rectangle"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content">
+            <corners android:radius="16dp" />
+            <solid android:color="@color/color_secondary_surface" />
+            <stroke android:width="1dp" android:color="@color/color_primary_highlight" />
+        </shape>
+    </item>
 
-        <com.google.android.material.appbar.CollapsingToolbarLayout
-            android:id="@+id/toolbar_layout"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:fitsSystemWindows="true"
-            app:contentScrim="?attr/colorPrimary"
-            app:layout_scrollFlags="scroll|exitUntilCollapsed"
-            app:toolbarId="@id/config_toolbar">
+<!--    <item android:left="-100dp" android:top="-100dp">-->
+<!--        <shape-->
+<!--            android:layout_width="wrap_content"-->
+<!--            android:layout_height="wrap_content"-->
+<!--            android:shape="oval">-->
+<!--            <size android:width="40dp" android:height="40dp"/>-->
+<!--            <solid android:color="@color/color_tertiary_surface"/>-->
+<!--            <stroke android:width="1dp" android:color="@color/color_primary_highlight" />-->
+<!--        </shape>-->
+<!--    </item>-->
 
-            <androidx.appcompat.widget.Toolbar
-                android:id="@+id/config_toolbar"
-                android:layout_width="match_parent"
-                android:layout_height="?attr/actionBarSize"
-                app:layout_collapseMode="pin"
-                app:popupTheme="@style/AppTheme.Toolbar.MenuPopover" />
-
-        </com.google.android.material.appbar.CollapsingToolbarLayout>
-
-    </com.google.android.material.appbar.AppBarLayout>
-
-    <androidx.constraintlayout.widget.ConstraintLayout
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        app:layout_behavior="@string/appbar_scrolling_view_behavior">
-
-       <FrameLayout
-            android:id="@+id/config_content_layout"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent" />
-
-    </androidx.constraintlayout.widget.ConstraintLayout>
-
-
-</androidx.coordinatorlayout.widget.CoordinatorLayout>
-
-
+</layer-list>

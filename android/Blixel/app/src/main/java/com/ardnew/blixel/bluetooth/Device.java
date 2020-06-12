@@ -184,6 +184,20 @@ public class Device implements Parcelable {
         return stringBuilder.toString().trim();
     }
 
+    public String displayName() {
+
+        if ((null != this.name()) && (this.name().length() > 0) && !(this.name().equals(Device.INVALID_NAME))) {
+            return this.name();
+        }
+        if ((null != this.manufacturer()) && (this.manufacturer().length() > 0) && !(this.manufacturer().equals(Device.INVALID_MFG))) {
+            return this.manufacturer();
+        }
+        if ((null != this.address()) && (this.address().length() > 0) && !(this.address().equals(Device.INVALID_ADDRESS))) {
+            return this.address();
+        }
+        return "Unnamed";
+    }
+
     public void setId(int id) {
 
         this.id = id;

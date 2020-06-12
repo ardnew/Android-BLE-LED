@@ -307,8 +307,8 @@ public class NeopixelStrip extends Neopixel {
             this.type  = PixelType.DEFAULT;
         } else {
             this.count = ((int)data[0] << 8) | (int)data[1];
-            this.order = ColorOrder.fromValue(((int)data[2] << 8) | (int)data[3]);
-            this.type  = PixelType.fromValue(((int)data[4] << 8) | (int)data[5]);
+            this.order = ColorOrder.fromValue(((int)data[2] << 8) | ((int)data[3] & 0xFF));
+            this.type  = PixelType.fromValue(((int)data[4] << 8) | ((int)data[5] & 0xFF));
         }
     }
 }

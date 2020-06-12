@@ -56,6 +56,8 @@ public class MainViewModel extends ViewModel implements ServiceConnection {
 
     private static final String keyBooleanIsServiceBound  = "com.ardnew.blixel.activity.main.MainViewModel.isServiceBound";
 
+    private static final String keyBooleanIsScanning      = "com.ardnew.blixel.activity.main.MainViewModel.isScanning";
+
     private static final String keyParcelConnection       = "com.ardnew.blixel.activity.main.MainViewModel.connection";
     private static final String keyBooleanAutoConnect     = "com.ardnew.blixel.activity.main.MainViewModel.autoConnect";
     private static final String keyParcelDevice           = "com.ardnew.blixel.activity.main.MainViewModel.device";
@@ -81,6 +83,10 @@ public class MainViewModel extends ViewModel implements ServiceConnection {
 
         if (!this.state.contains(keyBooleanIsServiceBound)) {
             this.state.set(keyBooleanIsServiceBound, false);
+        }
+
+        if (!this.state.contains(keyBooleanIsScanning)) {
+            this.state.set(keyBooleanIsScanning, false);
         }
 
         if (!this.state.contains(keyParcelConnection)) {
@@ -146,6 +152,26 @@ public class MainViewModel extends ViewModel implements ServiceConnection {
     public void onNullBinding(ComponentName name) {
 
         this.state.set(keyBooleanIsServiceBound, true);
+    }
+
+
+    public LiveData<Boolean> isScanning() {
+
+        return this.state.getLiveData(keyBooleanIsScanning);
+    }
+
+    public boolean getIsScanning() {
+
+        Boolean isScanning = this.state.get(keyBooleanIsScanning);
+        if (null == isScanning) {
+            isScanning = false;
+        }
+        return isScanning;
+    }
+
+    public void setIsScanning(boolean isScanning) {
+
+        this.state.set(keyBooleanIsScanning, isScanning);
     }
 
     public LiveData<Connection> connection() {
@@ -331,6 +357,33 @@ public class MainViewModel extends ViewModel implements ServiceConnection {
         final NeopixelAnima neopixelAnima = this.getNeopixelAnima();
         if ((null != neopixelAnima) && neopixelAnima.isValid()) {
             neopixelAnima.setMode(id, aniData);
+            MainViewModel.gattCallback.transmit(neopixelAnima);
+        }
+    }
+
+    public void updateNeopixelAnimaWheel(int speed) {
+
+        final NeopixelAnima neopixelAnima = this.getNeopixelAnima();
+        if ((null != neopixelAnima) && neopixelAnima.isValid()) {
+            neopixelAnima.setModeWheel(speed);
+            MainViewModel.gattCallback.transmit(neopixelAnima);
+        }
+    }
+
+    public void updateNeopixelAnimaChase(int speed, int length, int color1, int color2) {
+
+        final NeopixelAnima neopixelAnima = this.getNeopixelAnima();
+        if ((null != neopixelAnima) && neopixelAnima.isValid()) {
+            neopixelAnima.setModeChase(speed, length, color1, color2);
+            MainViewModel.gattCallback.transmit(neopixelAnima);
+        }
+    }
+
+    public void updateNeopixelAnimaFade(int speed, int length, int color1, int color2) {
+
+        final NeopixelAnima neopixelAnima = this.getNeopixelAnima();
+        if ((null != neopixelAnima) && neopixelAnima.isValid()) {
+            neopixelAnima.setModeFade(speed, length, color1, color2);
             MainViewModel.gattCallback.transmit(neopixelAnima);
         }
     }

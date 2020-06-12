@@ -55,7 +55,7 @@ import androidx.preference.PreferenceManager;
 
 import com.ardnew.blixel.R;
 import com.ardnew.blixel.Utility;
-import com.ardnew.blixel.activity.main.ui.config.ConfigFragment;
+import com.ardnew.blixel.activity.main.ui.device.DeviceFragment;
 import com.ardnew.blixel.activity.scan.ScanActivity;
 import com.ardnew.blixel.bluetooth.Connection;
 import com.ardnew.blixel.bluetooth.Device;
@@ -67,6 +67,7 @@ public class MainActivity extends AppCompatActivity implements MainViewModel.For
 
     private SharedPreferences sharedPreferences;
     private boolean isInitialized = false;
+    private boolean isResumed = false;
 
     private NavController navController;
     private AppBarConfiguration appBarConfiguration;
@@ -91,15 +92,49 @@ public class MainActivity extends AppCompatActivity implements MainViewModel.For
 
             DrawerLayout drawer = this.findViewById(R.id.main_drawer_layout);
             NavigationView navigationView = this.findViewById(R.id.main_nav_view);
+            CoordinatorLayout mainLayout = this.findViewById(R.id.main_layout);
+
+            this.mainViewModel.connectedDevice().observe(this, device -> {
+
+                MenuItem deviceGroupMenuItem = navigationView.getMenu().findItem(R.id.nav_group_device);
+                MenuItem deviceMenuItem = navigationView.getMenu().findItem(R.id.nav_device);
+
+                final boolean isConnectedToDevice = null != device;
+                if (this.isConnectedToDevice != isConnectedToDevice) {
+                    this.isConnectedToDevice = isConnectedToDevice;
+                    if (this.isResumed) {
+                        if (this.isConnectedToDevice) {
+                            deviceMenuItem.setTitle(device.displayName());
+                            Utility.makeSnackBar(mainLayout, (int)MainActivity.SNACKBAR_NOTIFY_DURATION,
+                                    Utility.format(this.getString(R.string.snackbar_connected_format), device.shortDescription())).show();
+                        } else {
+                            deviceMenuItem.setTitle(this.getString(R.string.menu_device));
+                            Utility.makeSnackBar(mainLayout, (int)MainActivity.SNACKBAR_NOTIFY_DURATION,
+                                    Utility.format(this.getString(R.string.snackbar_disconnected_text))).show();
+                        }
+                    }
+                }
+                deviceGroupMenuItem.setVisible(this.isConnectedToDevice);
+            });
+
+            this.mainViewModel.isScanning().observe(this, isScanning -> {
+
+                if (isScanning) {
+                    this.startActivityForResult(
+                            new Intent(this, ScanActivity.class), ScanActivity.REQUEST_DEVICE_SCAN
+                    );
+                    this.mainViewModel.setIsScanning(false);
+                }
+            });
 
             this.appBarConfiguration = new AppBarConfiguration.Builder(
-                    R.id.nav_home, R.id.nav_color, R.id.nav_effects, R.id.nav_motion, R.id.nav_devices, R.id.nav_config)
+                    R.id.nav_home, R.id.nav_color, R.id.nav_effects, R.id.nav_motion, R.id.nav_device)
                     .setDrawerLayout(drawer)
                     .build();
 
             Fragment navHostFragment = this.getSupportFragmentManager().findFragmentById(R.id.nav_host_fragment);
             if (navHostFragment instanceof NavHostFragment) {
-                this.navController = ((NavHostFragment) navHostFragment).getNavController();
+                this.navController = ((NavHostFragment)navHostFragment).getNavController();
                 NavigationUI.setupActionBarWithNavController(this, this.navController, this.appBarConfiguration);
                 NavigationUI.setupWithNavController(navigationView, this.navController);
             }
@@ -118,9 +153,19 @@ public class MainActivity extends AppCompatActivity implements MainViewModel.For
     }
 
     @Override
+    protected void onPause() {
+
+        super.onPause();
+
+        this.isResumed = false;
+    }
+
+    @Override
     protected void onResume() {
 
         super.onResume();
+
+        this.isResumed = true;
 
         // register the foreground activity with the connection view model so that it can post
         // messages to the foreground thread.
@@ -198,20 +243,18 @@ public class MainActivity extends AppCompatActivity implements MainViewModel.For
         switch (item.getItemId()) {
 
             case R.id.scan_menu_item:
-
-                this.startActivityForResult(
-                        new Intent(this, ScanActivity.class), ScanActivity.REQUEST_DEVICE_SCAN
-                );
+                this.mainViewModel.setIsScanning(true);
                 return true;
 
-            case R.id.disconnect_menu_item:
+            case R.id.disconnect_menu_item: {
                 if (this.isConnectedToDevice) {
                     this.mainViewModel.setDevice(null);
+                    navController.navigate(R.id.nav_home);
                 }
+            }
 
-            default:
-                return super.onOptionsItemSelected(item);
         }
+        return super.onOptionsItemSelected(item);
     }
 
     @Override
@@ -231,42 +274,26 @@ public class MainActivity extends AppCompatActivity implements MainViewModel.For
 
     private MainViewModel initViewModel() {
 
-        MainViewModel viewModel = new ViewModelProvider(this).get(MainViewModel.class);
+        MainViewModel mainViewModel = new ViewModelProvider(this).get(MainViewModel.class);
 
         Intent startServiceIntent = Connection.ServiceIntent.start(this);
         this.startService(startServiceIntent);
-        this.bindService(startServiceIntent, viewModel, Context.BIND_IMPORTANT);
+        this.bindService(startServiceIntent, mainViewModel, Context.BIND_IMPORTANT);
 
-        CoordinatorLayout mainLayout = this.findViewById(R.id.main_layout);
-
-        viewModel.connectedDevice().observe(this, device -> {
-            final boolean isConnectedToDevice = null != device;
-            if (this.isConnectedToDevice != isConnectedToDevice) {
-                this.isConnectedToDevice = isConnectedToDevice;
-                if (this.isConnectedToDevice) {
-                    Utility.makeSnackBar(mainLayout, (int) MainActivity.SNACKBAR_NOTIFY_DURATION,
-                            Utility.format(this.getString(R.string.snackbar_connected_format), device.shortDescription())).show();
-                } else {
-                    Utility.makeSnackBar(mainLayout, (int) MainActivity.SNACKBAR_NOTIFY_DURATION,
-                            Utility.format(this.getString(R.string.snackbar_disconnected_text))).show();
-                }
-            }
-        });
-
-        return viewModel;
+        return mainViewModel;
     }
 
     public void updatePreference(@NonNull String key, Object value) {
 
         if (null != this.sharedPreferences) {
-            ConfigFragment.setPreference(this.sharedPreferences, key, value);
+            DeviceFragment.setPreference(this.sharedPreferences, key, value);
         }
     }
 
     public Object getPreference(@NonNull String key) {
 
         if (null != this.sharedPreferences) {
-            ConfigFragment.getPreference(this.sharedPreferences, key);
+            DeviceFragment.getPreference(this.sharedPreferences, key);
         }
         return null;
     }
